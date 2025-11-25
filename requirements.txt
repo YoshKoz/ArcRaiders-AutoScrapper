@@ -1,0 +1,11 @@
+# Core dependencies
+numpy
+opencv-python
+pywinctl
+pytesseract
+pydirectinput-rgx
+
+# Optional helpers
+tqdm
+mss
+pyautogui

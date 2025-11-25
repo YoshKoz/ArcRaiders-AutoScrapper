@@ -1,0 +1,1261 @@
+[
+  {
+    "index": 1,
+    "name": "Advanced ARC Powercell",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 2,
+    "name": "Advanced Electrical Components",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 3,
+    "name": "Advanced Mechanical Components",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 4,
+    "name": "Agave",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 5,
+    "name": "Alarm Clock",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 6,
+    "name": "Antiseptic",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 7,
+    "name": "Apricot",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 8,
+    "name": "ARC Alloy",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 9,
+    "name": "ARC Circuitry",
+    "decision": [
+      "KEEP",
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 10,
+    "name": "ARC Coolant",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 11,
+    "name": "ARC Flex Rubber",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 12,
+    "name": "ARC Motion Core",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 13,
+    "name": "ARC Performance Steel",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 14,
+    "name": "ARC Powercell",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 15,
+    "name": "ARC Synthetic Resin",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 16,
+    "name": "ARC Thermo Lining",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 17,
+    "name": "Assorted Seeds",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 18,
+    "name": "Bastion Cell",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 19,
+    "name": "Battery",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 20,
+    "name": "Bicycle Pump",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 21,
+    "name": "Bombardier Cell",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 22,
+    "name": "Broken Flashlight",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 23,
+    "name": "Broken Guidance System",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 24,
+    "name": "Broken Handheld Radio",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 25,
+    "name": "Broken Taser",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 26,
+    "name": "Burned Arc Circuit",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 27,
+    "name": "Burned Arc Circuitry",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 28,
+    "name": "Camera Lens",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 29,
+    "name": "Candle Holder",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 30,
+    "name": "Canister",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 31,
+    "name": "Cat Bed",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 32,
+    "name": "Chemicals",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 33,
+    "name": "Complex Gun Parts",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 34,
+    "name": "Coolant",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 35,
+    "name": "Cooling Coil",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 36,
+    "name": "Cooling Fan",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 37,
+    "name": "Cracked Bioscanner",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 38,
+    "name": "Crude Explosives",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 39,
+    "name": "Crumpled Plastic Bottle",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 40,
+    "name": "Damaged ARC Motion Core",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 41,
+    "name": "Damaged ARC Powercell",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 42,
+    "name": "Damaged Fireball Burner",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 43,
+    "name": "Damaged Heat Sink",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 44,
+    "name": "Damaged Hornet Driver",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 45,
+    "name": "Damaged Rocketeer Driver",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 46,
+    "name": "Damaged Tick Pod",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 47,
+    "name": "Damaged Wasp Drive",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 48,
+    "name": "Damaged Wasp Driver",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 49,
+    "name": "Deflated Football",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 50,
+    "name": "Degraded ARC Rubber",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 51,
+    "name": "Diving Goggles",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 52,
+    "name": "Dog Collar",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 53,
+    "name": "Dried-Out ARC Resin",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 54,
+    "name": "Duct Tape",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 55,
+    "name": "Durable Cloth",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 56,
+    "name": "Electrical Components",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 57,
+    "name": "Exodus Modules",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 58,
+    "name": "Expired Respirator",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 59,
+    "name": "Explosive Compound",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 60,
+    "name": "Explosive Mixture",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 61,
+    "name": "Fabric",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 62,
+    "name": "Fertilizer",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 63,
+    "name": "Fireball Burner",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 64,
+    "name": "Fireball Burner",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 65,
+    "name": "Flow Controller",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 66,
+    "name": "Flute",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 67,
+    "name": "Frequency Modulation Box",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 68,
+    "name": "Fried Motherboard",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 69,
+    "name": "Frying Pan",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 70,
+    "name": "Garlic Press",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 71,
+    "name": "Geiger Counter",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 72,
+    "name": "Great Mullein",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 73,
+    "name": "Headphones",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 74,
+    "name": "Heavy Gun Parts",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 75,
+    "name": "Hornet Driver",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 76,
+    "name": "Household Cleaner",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 77,
+    "name": "Humidifier",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 78,
+    "name": "Ice Cream Scooper",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 79,
+    "name": "Impure ARC Coolant",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 80,
+    "name": "Industrial Battery",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 81,
+    "name": "Industrial Charger",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 82,
+    "name": "Industrial Magnet",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 83,
+    "name": "Ion Sputter",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 84,
+    "name": "Laboratory Reagents",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 85,
+    "name": "Leaper Pulse Unit",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 86,
+    "name": "Lemon",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 87,
+    "name": "Light Bulb",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 88,
+    "name": "Light Gun Parts",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 89,
+    "name": "Magnet",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 90,
+    "name": "Magnetic Accelerator",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 91,
+    "name": "Magnetron",
+    "decision": [
+      "KEEP",
+      "SELL"
+    ]
+  },
+  {
+    "index": 92,
+    "name": "Matriarch Reactor",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 93,
+    "name": "Mechanical Components",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 94,
+    "name": "Medium Gun Parts",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 95,
+    "name": "Metal Brackets",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 96,
+    "name": "Metal Parts",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 97,
+    "name": "Mini Centrifuge",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 98,
+    "name": "Mod Components",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 99,
+    "name": "Moss",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 100,
+    "name": "Motor",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 101,
+    "name": "Mushroom",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 102,
+    "name": "Number Plate",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 103,
+    "name": "Oil",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 104,
+    "name": "Olives",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 105,
+    "name": "Plastic Parts",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 106,
+    "name": "Polluted Air Filter",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 107,
+    "name": "Pop Trigger",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 108,
+    "name": "Portable TV",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 109,
+    "name": "Power Bank",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 110,
+    "name": "Power Cable",
+    "decision": [
+      "KEEP",
+      "SELL"
+    ]
+  },
+  {
+    "index": 111,
+    "name": "Power Rod",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 112,
+    "name": "Prickly Pear",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 113,
+    "name": "Processor",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 114,
+    "name": "Projector",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 115,
+    "name": "Queen Reactor",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 116,
+    "name": "Radio",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 117,
+    "name": "Radio Relay",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 118,
+    "name": "Remote Control",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 119,
+    "name": "Resin",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 120,
+    "name": "Ripped Safety Vest",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 121,
+    "name": "Rocket Thruster",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 122,
+    "name": "Rocketeer Driver",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 123,
+    "name": "Roots",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 124,
+    "name": "Rope",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 125,
+    "name": "Rotary Encoder",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 126,
+    "name": "Rubber Pad",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 127,
+    "name": "Rubber Parts",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 128,
+    "name": "Ruined Accordion",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 129,
+    "name": "Ruined Baton",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 130,
+    "name": "Ruined Handcuffs",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 131,
+    "name": "Ruined Parachute",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 132,
+    "name": "Ruined Riot Shield",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 133,
+    "name": "Ruined Tactical Vest",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 134,
+    "name": "Rusted Bolts",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 135,
+    "name": "Rusted Gear",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 136,
+    "name": "Rusted Shut Medical Kit",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 137,
+    "name": "Rusted Tools",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 138,
+    "name": "Rusty ARC Steel",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 139,
+    "name": "Sample Cleaner",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 140,
+    "name": "Sensors",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 141,
+    "name": "Sensors",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 142,
+    "name": "Sentinel Firing Core",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 143,
+    "name": "Sentinel Part",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 144,
+    "name": "Shredder Gyro",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 145,
+    "name": "Signal Amplifier",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 146,
+    "name": "Simple Gun Parts",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 147,
+    "name": "Snitch Scanner",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 148,
+    "name": "Speaker Component",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 149,
+    "name": "Spectrometer",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 150,
+    "name": "Spotter Relay",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 151,
+    "name": "Spring",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 152,
+    "name": "Spring Cushion",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 153,
+    "name": "Steel Spring",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 154,
+    "name": "Surveyor Vault",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 155,
+    "name": "Synthesized Fuel",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 156,
+    "name": "Syringe",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 157,
+    "name": "Tattered Arc Lining",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 158,
+    "name": "Tattered Clothes",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 159,
+    "name": "Telemetry Transceiver",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 160,
+    "name": "Thermostat",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 161,
+    "name": "Tick Pod",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 162,
+    "name": "Toaster",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 163,
+    "name": "Torn Blanket",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 164,
+    "name": "Turbo Pump",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 165,
+    "name": "Unusable Weapon",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 166,
+    "name": "Very Comfortable Pillow",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 167,
+    "name": "Volcanic Rock",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 168,
+    "name": "Voltage Converter",
+    "decision": [
+      "CRAFTING MATERIAL"
+    ]
+  },
+  {
+    "index": 169,
+    "name": "Wasp Driver",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 170,
+    "name": "Water Filter",
+    "decision": [
+      "RECYCLE",
+      "SELL"
+    ]
+  },
+  {
+    "index": 171,
+    "name": "Water Pump",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 172,
+    "name": "Wires",
+    "decision": [
+      "KEEP"
+    ]
+  }
+]
