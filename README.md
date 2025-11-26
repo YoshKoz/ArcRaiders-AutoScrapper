@@ -4,8 +4,8 @@ Walks through each inventory item and applies Sell/Recycle decisions using only 
 
 ## How it works
 - Captures the active Arc Raiders window, finds the item infobox, OCRs the title, and looks up the decision from `items/items_actions.json`.
-- Executes Sell/Recycle clicks when configured; in dry-run mode it only logs actions.
-- Press Escape to cancel (may need a couple presses if the game is busy).
+- Executes Sell/Recycle depending on the recommended action.
+- Press Escape to cancel (may need a couple presses)
 
 ## Setup
 1) Install dependencies: `pip install -r requirements.txt`.
