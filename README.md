@@ -9,6 +9,7 @@ Walks through each inventory item and applies Sell/Recycle decisions using only 
 
 ## Setup
 1) Install dependencies: `pip install -r requirements.txt`.
+2) You need [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki#tesseract-installer-for-windows) installed
 
 ## Usage
 Main entrypoint: run `inventory_scanner.py` from the repo root.
