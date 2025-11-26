@@ -28,6 +28,29 @@ SELL_CONFIRM_RECT_NORM = (0.5047, 0.6941, 0.1791, 0.0531)
 RECYCLE_CONFIRM_RECT_NORM = (0.5058, 0.6274, 0.1777, 0.0544)
 
 
+def is_slot_empty(
+    slot_bgr: np.ndarray,
+    v_thresh: int = 120,
+    bright_frac_thresh: float = 0.01,
+    var_thresh: float = 400,
+) -> bool:
+    """
+    Decide if an inventory slot is visually empty.
+
+    Heuristic:
+      - Convert to HSV and check the fraction of bright pixels (V channel)
+      - Convert to gray and check variance (texture / contrast)
+    """
+    hsv = cv2.cvtColor(slot_bgr, cv2.COLOR_BGR2HSV)
+    v = hsv[:, :, 2]
+    bright_fraction = np.mean(v > v_thresh)
+
+    gray = cv2.cvtColor(slot_bgr, cv2.COLOR_BGR2GRAY)
+    gray_var = gray.var()
+
+    return (bright_fraction < bright_frac_thresh) and (gray_var < var_thresh)
+
+
 def find_infobox(bgr_image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
     """
     Locate the largest rectangle that matches the infobox background color.

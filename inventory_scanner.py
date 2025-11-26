@@ -53,6 +53,7 @@ from vision_ocr import (
     rect_center,
     sell_confirm_button_center,
     title_roi,
+    is_slot_empty,
 )
 
 
@@ -201,17 +202,41 @@ def scan_inventory(
     progress = tqdm(total=total_cells, desc="Scanning grid") if show_progress and tqdm is not None else None
     current_page = -1
     idx = 0
+    stop_at_global_idx: Optional[int] = None
 
     try:
         while idx < len(page_cells):
             page, cell = page_cells[idx]
+            global_idx = page * cells_per_page + cell.index
+
             if page != current_page:
                 if current_page != -1:
                     scroll_to_next_grid(scroll_clicks_per_page)
+                empty_idx = _detect_first_empty_cell(
+                    page,
+                    cells,
+                    win_left,
+                    win_top,
+                    win_width,
+                    win_height,
+                )
+                if empty_idx is not None and (stop_at_global_idx is None or empty_idx < stop_at_global_idx):
+                    stop_at_global_idx = empty_idx
+                    detected_page = empty_idx // cells_per_page
+                    detected_cell = empty_idx % cells_per_page
+                    print(
+                        f"[empty] empty cell detected at idx={empty_idx:03d} "
+                        f"page={detected_page + 1:02d} cell={detected_cell:02d}"
+                    )
+                if stop_at_global_idx is not None and global_idx >= stop_at_global_idx:
+                    print(f"[empty] reached empty cell idx={stop_at_global_idx:03d}; stopping scan.")
+                    break
                 open_cell_menu(cell, win_left, win_top)
                 current_page = page
 
-            global_idx = page * cells_per_page + cell.index
+            if stop_at_global_idx is not None and global_idx >= stop_at_global_idx:
+                print(f"[empty] reached empty cell idx={stop_at_global_idx:03d}; stopping scan.")
+                break
 
             abort_if_escape_pressed()
             if hasattr(window, "isAlive") and not window.isAlive:  # type: ignore[attr-defined]
@@ -320,13 +345,49 @@ def scan_inventory(
             idx += 1
             if idx < len(page_cells):
                 next_page, next_cell = page_cells[idx]
-                if next_page == page:
+                next_global_idx = next_page * cells_per_page + next_cell.index
+                if next_page == page and (stop_at_global_idx is None or next_global_idx < stop_at_global_idx):
                     open_cell_menu(next_cell, win_left, win_top)
     finally:
         if progress:
             progress.close()
 
     return results
+
+
+# ---------------------------------------------------------------------------
+# Empty cell detection
+# ---------------------------------------------------------------------------
+
+def _detect_first_empty_cell(
+    page: int,
+    cells: List[Cell],
+    window_left: int,
+    window_top: int,
+    window_width: int,
+    window_height: int,
+) -> Optional[int]:
+    """
+    Capture the current page and return the global index of the first empty cell.
+    """
+    abort_if_escape_pressed()
+
+    # Keep the cursor out of the grid so it doesn't occlude cells.
+    move_absolute(window_left + 10, window_top + 10, label="clear for empty detection")
+    pause_action()
+
+    window_bgr = capture_region((window_left, window_top, window_width, window_height))
+
+    for cell in cells:
+        abort_if_escape_pressed()
+        x, y, w, h = cell.rect
+        slot_bgr = window_bgr[y:y + h, x:x + w]
+        if slot_bgr.size == 0:
+            continue
+        if is_slot_empty(slot_bgr):
+            return page * len(cells) + cell.index
+
+    return None
 
 
 # ---------------------------------------------------------------------------
