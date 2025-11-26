@@ -9,7 +9,7 @@ from typing import Iterator, Tuple
 
 
 # ---------------------------------------------------------------------------
-# Configuration (derived from your sampled ROIs)
+# Configuration
 # ---------------------------------------------------------------------------
 
 GRID_COLS = 4   # 4 across
