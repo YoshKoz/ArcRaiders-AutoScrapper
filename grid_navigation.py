@@ -1,10 +1,7 @@
 """
-inventory_grid.py
+Grid helpers for the 4x6 ARC Raiders inventory UI.
 
-Utilities for working with the 4x6 item grid in the ARC Raiders inventory UI.
-
-- Coordinate system is window-relative pixels for a 1920x1080 window.
-- Grid is 4 columns (left->right) by 6 rows (top->bottom).
+Coordinate system is window-relative pixels for a 1920x1080 window.
 """
 
 from dataclasses import dataclass
@@ -29,11 +26,6 @@ STEP_Y = 104
 # Approximate cell size (used for rectangles + centers)
 CELL_W = 96
 CELL_H = 96
-
-# Window size (for normalized coordinates)
-WIN_W = 1920
-WIN_H = 1080
-
 
 # ---------------------------------------------------------------------------
 # Data structures
@@ -61,12 +53,6 @@ class Cell:
         cx = self.x + self.width / 2.0
         cy = self.y + self.height / 2.0
         return cx, cy
-
-    @property
-    def center_norm(self) -> Tuple[float, float]:
-        """Center of the cell normalized to [0,1] relative to window size."""
-        cx, cy = self.center
-        return cx / WIN_W, cy / WIN_H
 
 
 # ---------------------------------------------------------------------------
@@ -128,30 +114,3 @@ class Grid:
     def center(self, row: int, col: int) -> Tuple[float, float]:
         """Center (cx, cy) of cell at (row, col)."""
         return self.cell(row, col).center
-
-    def center_norm(self, row: int, col: int) -> Tuple[float, float]:
-        """Normalized center (cx_norm, cy_norm) of cell at (row, col)."""
-        return self.cell(row, col).center_norm
-
-
-# ---------------------------------------------------------------------------
-# Example usage / quick test
-# ---------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    grid = Grid()
-
-    print(f"Grid has {len(grid)} cells.\n")
-
-    # Example: iterate row-by-row, left-to-right
-    for cell in grid:
-        cx, cy = cell.center
-        print(
-            f"Cell idx={cell.index:2d} "
-            f"(row={cell.row}, col={cell.col}) "
-            f"rect={cell.rect} center=({cx:.1f}, {cy:.1f})"
-        )
-
-    # Example: directly access a specific cell
-    print("\nCenter of top-left cell (row=0,col=0):", grid.center(0, 0))
-    print("Center of bottom-right cell (row=5,col=3):", grid.center(5, 3))

@@ -1,6 +1,6 @@
 # Arc Raiders Inventory Auto Scrapper
 
-Lightweight helper that walks the 4x6 inventory grid and applies Sell/Recycle decisions using only screenshots and OCR. It never hooks the game process, memory, or network; everything is screen capture plus simulated mouse input.
+Walks through each inventory item and applies Sell/Recycle decisions using only screenshots and OCR. It never hooks the game process, memory, or network; everything is screen capture plus simulated mouse input.
 
 ## How it works
 - Captures the active Arc Raiders window, finds the item infobox, OCRs the title, and looks up the decision from `items/items_actions.json`.
@@ -8,14 +8,13 @@ Lightweight helper that walks the 4x6 inventory grid and applies Sell/Recycle de
 - Press Escape to cancel (may need a couple presses if the game is busy).
 
 ## Setup
-1) Install Python 3 and dependencies: `pip install -r requirements.txt`.
-2) Ensure `mss` or `pyautogui` is available for screenshots (included in requirements).
+1) Install dependencies: `pip install -r requirements.txt`.
 
 ## Usage
-1) In Arc Raiders, open your inventory (ideally the “Crafting Materials” tab).
+1) In Arc Raiders, open your inventory (ideally the “Crafting Materials” tab). Make sure you are scrolled all the way up.
 2) Run: `python3 inventory_scanner.py`
 3) Alt-tab back into Arc Raiders; after a few seconds the script will start processing.
-4) Press Escape to abort.
+4) Press Escape to abort (may need to press a few times).
 
 ### Dry run
 Log decisions without clicking Sell/Recycle:
