@@ -185,7 +185,7 @@ def scan_inventory(
 
     actions: ActionMap = actions_override if actions_override is not None else load_item_actions(actions_path)
 
-    grid = Grid()
+    grid = Grid(window_size=(win_width, win_height))
     cells = list(grid)
     cells_per_page = len(cells)
     total_cells = cells_per_page * pages
@@ -447,7 +447,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         print(f"Fatal: {exc}")
         return 1
 
-    cells_per_page = len(Grid())
+    cells_per_page = Grid.COLS * Grid.ROWS
     for result in results:
         label = result.item_name or "<unreadable>"
         global_idx = result.page * cells_per_page + result.cell.index
