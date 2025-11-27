@@ -23,27 +23,67 @@ SELL_CONFIRM_RECT_NORM = (0.5047, 0.6941, 0.1791, 0.0531)
 RECYCLE_CONFIRM_RECT_NORM = (0.5058, 0.6274, 0.1777, 0.0544)
 
 
+def is_empty_cell(bright_fraction: float, gray_var: float, edge_fraction: float) -> bool:
+    """
+    Decide if a slot is empty based on precomputed metrics.
+
+    Empirically tuned heuristic: mostly dark with low texture and few edges.
+    """
+    # Primary test: looks dark with few bright pixels
+    if bright_fraction >= 0.03:
+        return False
+
+    # Fallback
+    if gray_var > 700:
+        return False
+    if edge_fraction > 0.09:
+        return False
+
+    return True
+
+
+def slot_metrics(
+    slot_bgr: np.ndarray,
+    v_thresh: int = 120,
+    canny1: int = 50,
+    canny2: int = 150,
+) -> Tuple[float, float, float]:
+    """
+    Compute simple statistics for an inventory slot.
+
+    Returns:
+        (bright_fraction, gray_var, edge_fraction)
+    """
+    if slot_bgr.size == 0:
+        raise ValueError("slot_bgr is empty (ROI outside image bounds?)")
+
+    # Brightness stats from HSV V channel
+    hsv = cv2.cvtColor(slot_bgr, cv2.COLOR_BGR2HSV)
+    v = hsv[:, :, 2]
+    bright_fraction = float(np.mean(v > v_thresh))
+
+    # Grayscale variance = how textured / high-contrast the cell is
+    gray = cv2.cvtColor(slot_bgr, cv2.COLOR_BGR2GRAY)
+    gray_var = float(gray.var())
+
+    # Edge density via Canny
+    edges = cv2.Canny(gray, canny1, canny2)
+    edge_fraction = float(np.count_nonzero(edges)) / edges.size
+
+    return bright_fraction, gray_var, edge_fraction
+
+
 def is_slot_empty(
     slot_bgr: np.ndarray,
     v_thresh: int = 120,
-    bright_frac_thresh: float = 0.01,
-    var_thresh: float = 400,
+    canny1: int = 50,
+    canny2: int = 150,
 ) -> bool:
     """
-    Decide if an inventory slot is visually empty.
-
-    Heuristic:
-      - Convert to HSV and check the fraction of bright pixels (V channel)
-      - Convert to gray and check variance (texture / contrast)
+    Decide if an inventory slot is visually empty using slot metrics.
     """
-    hsv = cv2.cvtColor(slot_bgr, cv2.COLOR_BGR2HSV)
-    v = hsv[:, :, 2]
-    bright_fraction = np.mean(v > v_thresh)
-
-    gray = cv2.cvtColor(slot_bgr, cv2.COLOR_BGR2GRAY)
-    gray_var = gray.var()
-
-    return (bright_fraction < bright_frac_thresh) and (gray_var < var_thresh)
+    bright_fraction, gray_var, edge_fraction = slot_metrics(slot_bgr, v_thresh, canny1, canny2)
+    return is_empty_cell(bright_fraction, gray_var, edge_fraction)
 
 
 def find_infobox(bgr_image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
