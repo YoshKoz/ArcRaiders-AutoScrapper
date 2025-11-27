@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+import time
 from typing import Dict, List, Literal, Optional, Tuple
 
 import cv2
@@ -34,6 +35,8 @@ class InfoboxOcrResult:
     sell_bbox: Optional[Tuple[int, int, int, int]]
     recycle_bbox: Optional[Tuple[int, int, int, int]]
     processed: np.ndarray
+    preprocess_time: float
+    ocr_time: float
 
 
 def is_empty_cell(bright_fraction: float, gray_var: float, edge_fraction: float) -> bool:
@@ -365,16 +368,29 @@ def ocr_infobox(infobox_bgr: np.ndarray) -> InfoboxOcrResult:
     """
     OCR the full infobox once to derive the title and action line positions.
     """
+    preprocess_start = time.perf_counter()
     processed = preprocess_for_ocr(infobox_bgr)
+    preprocess_time = time.perf_counter() - preprocess_start
+
+    ocr_time = 0.0
     try:
+        ocr_start = time.perf_counter()
         data = pytesseract.image_to_data(processed, config="--psm 6", output_type=pytesseract.Output.DICT)
+        ocr_time = time.perf_counter() - ocr_start
     except Exception as exc:
         print(
             f"[vision_ocr] pytesseract image_to_data failed for full infobox; "
             f"falling back to empty OCR result. error={exc}",
             flush=True,
         )
-        return InfoboxOcrResult(item_name="", sell_bbox=None, recycle_bbox=None, processed=processed)
+        return InfoboxOcrResult(
+            item_name="",
+            sell_bbox=None,
+            recycle_bbox=None,
+            processed=processed,
+            preprocess_time=preprocess_time,
+            ocr_time=ocr_time,
+        )
 
     item_name = _extract_title_from_data(data, processed.shape[0])
     sell_bbox = _extract_action_line_bbox(data, "sell")
@@ -384,6 +400,8 @@ def ocr_infobox(infobox_bgr: np.ndarray) -> InfoboxOcrResult:
         sell_bbox=sell_bbox,
         recycle_bbox=recycle_bbox,
         processed=processed,
+        preprocess_time=preprocess_time,
+        ocr_time=ocr_time,
     )
 
 

@@ -77,7 +77,7 @@ from vision_ocr import (
 # Configuration
 # ---------------------------------------------------------------------------
 
-MENU_APPEAR_DELAY = 0.05
+MENU_APPEAR_DELAY = 0.3
 INFOBOX_RETRY_DELAY = 0.05
 INFOBOX_RETRIES = 3
 
@@ -175,6 +175,7 @@ def scan_inventory(
     apply_actions: bool = True,
     actions_path: Path = ITEM_ACTIONS_PATH,
     actions_override: Optional[ActionMap] = None,
+    profile_timing: bool = False,
 ) -> List[ItemActionResult]:
     """
     Walk each 6x4 grid (top-to-bottom, left-to-right), OCR each cell's item
@@ -271,6 +272,7 @@ def scan_inventory(
             while idx_in_page < len(cells):
                 cell = cells[idx_in_page]
                 global_idx = page * cells_per_page + cell.index
+                cell_start = time.perf_counter()
 
                 if stop_at_global_idx is not None and global_idx >= stop_at_global_idx:
                     print(f"[empty] reached empty cell idx={stop_at_global_idx:03d}; stopping scan.")
@@ -289,12 +291,24 @@ def scan_inventory(
                 infobox_ocr = None
                 sell_bbox_rel: Optional[Tuple[int, int, int, int]] = None
                 recycle_bbox_rel: Optional[Tuple[int, int, int, int]] = None
+                capture_time = 0.0
+                ocr_time = 0.0
+                preprocess_time = 0.0
+                find_time = 0.0
+                capture_attempts = 0
+                found_on_attempt = 0
 
-                for _ in range(infobox_retries):
+                for attempt in range(1, infobox_retries + 1):
+                    capture_attempts += 1
                     abort_if_escape_pressed()
+                    capture_start = time.perf_counter()
                     window_bgr = capture_region((win_left, win_top, win_width, win_height))
+                    capture_time += time.perf_counter() - capture_start
+                    find_start = time.perf_counter()
                     infobox_rect = find_infobox(window_bgr)
+                    find_time += time.perf_counter() - find_start
                     if infobox_rect:
+                        found_on_attempt = attempt
                         break
                     time.sleep(INFOBOX_RETRY_DELAY)
                     pause_action()
@@ -304,6 +318,8 @@ def scan_inventory(
                     pause_action()
                     x, y, w, h = infobox_rect
                     infobox_ocr = ocr_infobox(window_bgr[y:y + h, x:x + w])
+                    preprocess_time += infobox_ocr.preprocess_time
+                    ocr_time += infobox_ocr.ocr_time
                     item_name = infobox_ocr.item_name
                     sell_bbox_rel = infobox_ocr.sell_bbox
                     recycle_bbox_rel = infobox_ocr.recycle_bbox
@@ -384,6 +400,16 @@ def scan_inventory(
 
                 if progress:
                     progress.update(1)
+
+                if profile_timing:
+                    total_time = time.perf_counter() - cell_start
+                    print(
+                        f"[perf] idx={global_idx:03d} capture={capture_time:.3f}s "
+                        f"find={find_time:.3f}s preprocess={preprocess_time:.3f}s "
+                        f"ocr={ocr_time:.3f}s total={total_time:.3f}s "
+                        f"tries={capture_attempts} found_at={found_on_attempt} "
+                        f"infobox={'y' if infobox_rect else 'n'}"
+                    )
 
                 idx_in_page += 1
                 if idx_in_page < len(cells):
@@ -617,6 +643,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         action="store_true",
         help="Scan only; log planned actions without clicking sell/recycle.",
     )
+    parser.add_argument(
+        "--profile",
+        action="store_true",
+        help="Log per-item timing (capture, OCR, total) to identify bottlenecks.",
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
@@ -629,6 +660,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
             scroll_clicks_per_page=args.scroll_clicks,
             apply_actions=not args.dry_run,
             actions_path=args.actions_file,
+            profile_timing=args.profile,
         )
     except KeyboardInterrupt:
         print("Aborted by Escape key.")

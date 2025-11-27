@@ -31,12 +31,13 @@ ACTION_DELAY = 0.05
 MOVE_DURATION = 0.05
 
 # Cell click positioning
-LAST_ROW_SAFE_Y_RATIO = 0.85
+LAST_ROW_SAFE_Y_RATIO = 0.2
 
 # Scrolling
 # Alternate 19/20 downward scroll clicks to advance between 6x4 grids.
 SCROLL_CLICKS_PER_PAGE = 19
-SCROLL_INTERVAL = 0.0
+SCROLL_MOVE_DURATION = 0.5
+SCROLL_INTERVAL = 0.02
 SCROLL_SETTLE_DELAY = 0.05
 
 # Keyboard
@@ -226,10 +227,10 @@ def scroll_to_next_grid_at(
     """
     abort_if_escape_pressed()
     gx, gy = grid_center_abs
-    move_absolute(gx, gy, label="move to grid center before scroll")
+    move_absolute(gx, gy, label="move to grid center before scroll", duration=SCROLL_MOVE_DURATION)
 
     scroll_clicks = -abs(clicks)
-    timed_action("scroll", pdi.scroll, scroll_clicks, _pause=False, interval=SCROLL_INTERVAL)
+    timed_action("vscroll", pdi.vscroll, scroll_clicks, _pause=False, interval=SCROLL_INTERVAL)
     sleep_with_abort(SCROLL_SETTLE_DELAY)
 
     if safe_point_abs is not None:
@@ -240,7 +241,7 @@ def scroll_to_next_grid_at(
 def _cell_screen_center(cell: Cell, window_left: int, window_top: int) -> Tuple[int, int]:
     cx, cy = cell.safe_center
     # Game quirk: on the last row the infobox can render off-screen when we click dead-center,
-    # hiding Sell/Recycle. Bias toward the bottom of the safe area to keep the infobox visible.
+    # hiding Sell/Recycle. Bias toward the top of the safe area to keep the infobox visible.
     if cell.row == Grid.ROWS - 1:
         x1, y1, x2, y2 = cell.safe_bounds
         safe_height = y2 - y1
