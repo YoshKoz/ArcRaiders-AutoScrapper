@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import Dict, List, Literal, Optional, Tuple
 
 import cv2
@@ -25,6 +26,14 @@ TITLE_HEIGHT_REL = 0.18
 # Confirmation buttons (window-normalized rectangles)
 SELL_CONFIRM_RECT_NORM = (0.5047, 0.6941, 0.1791, 0.0531)
 RECYCLE_CONFIRM_RECT_NORM = (0.5058, 0.6274, 0.1777, 0.0544)
+
+
+@dataclass
+class InfoboxOcrResult:
+    item_name: str
+    sell_bbox: Optional[Tuple[int, int, int, int]]
+    recycle_bbox: Optional[Tuple[int, int, int, int]]
+    processed: np.ndarray
 
 
 def is_empty_cell(bright_fraction: float, gray_var: float, edge_fraction: float) -> bool:
@@ -227,6 +236,59 @@ def preprocess_for_ocr(roi_bgr: np.ndarray) -> np.ndarray:
     return binary
 
 
+def _extract_title_from_data(
+    ocr_data: Dict[str, List],
+    image_height: int,
+    top_fraction: float = 0.22,
+) -> str:
+    """
+    Choose the best-confidence line near the top of the infobox as the title.
+    """
+    texts = ocr_data.get("text", [])
+    if not texts:
+        return ""
+
+    cutoff = max(1.0, float(image_height) * top_fraction)
+    groups: Dict[Tuple[int, int, int, int], List[int]] = {}
+    n = len(texts)
+    for i in range(n):
+        raw_text = texts[i] or ""
+        cleaned = clean_ocr_text(raw_text)
+        if not cleaned:
+            continue
+
+        top = float(ocr_data["top"][i])
+        height = float(ocr_data["height"][i])
+        center_y = top + (height / 2.0)
+        if center_y > cutoff:
+            continue
+
+        key = (
+            int(ocr_data["page_num"][i]),
+            int(ocr_data["block_num"][i]),
+            int(ocr_data["par_num"][i]),
+            int(ocr_data["line_num"][i]),
+        )
+        groups.setdefault(key, []).append(i)
+
+    if not groups:
+        return ""
+
+    def _group_score(indices: List[int]) -> float:
+        confs = []
+        for idx in indices:
+            try:
+                confs.append(float(ocr_data["conf"][idx]))
+            except Exception:
+                continue
+        return sum(confs) / len(confs) if confs else -1.0
+
+    best_key = max(groups.keys(), key=lambda k: _group_score(groups[k]))
+    ordered_indices = sorted(groups[best_key])
+    parts = [clean_ocr_text(texts[i] or "") for i in ordered_indices if texts[i]]
+    return " ".join(p for p in parts if p).strip()
+
+
 def _extract_action_line_bbox(
     ocr_data: Dict[str, List],
     target: Literal["sell", "recycle"],
@@ -297,6 +359,32 @@ def find_action_bbox_by_ocr(
 
     bbox = _extract_action_line_bbox(data, target)
     return bbox, processed
+
+
+def ocr_infobox(infobox_bgr: np.ndarray) -> InfoboxOcrResult:
+    """
+    OCR the full infobox once to derive the title and action line positions.
+    """
+    processed = preprocess_for_ocr(infobox_bgr)
+    try:
+        data = pytesseract.image_to_data(processed, config="--psm 6", output_type=pytesseract.Output.DICT)
+    except Exception as exc:
+        print(
+            f"[vision_ocr] pytesseract image_to_data failed for full infobox; "
+            f"falling back to empty OCR result. error={exc}",
+            flush=True,
+        )
+        return InfoboxOcrResult(item_name="", sell_bbox=None, recycle_bbox=None, processed=processed)
+
+    item_name = _extract_title_from_data(data, processed.shape[0])
+    sell_bbox = _extract_action_line_bbox(data, "sell")
+    recycle_bbox = _extract_action_line_bbox(data, "recycle")
+    return InfoboxOcrResult(
+        item_name=item_name,
+        sell_bbox=sell_bbox,
+        recycle_bbox=recycle_bbox,
+        processed=processed,
+    )
 
 
 def ocr_item_name(roi_bgr: np.ndarray) -> str:

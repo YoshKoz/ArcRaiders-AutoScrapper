@@ -64,13 +64,11 @@ from ui_backend import (
     window_rect,
 )
 from vision_ocr import (
-    find_action_bbox_by_ocr,
     find_infobox,
-    ocr_item_name,
+    ocr_infobox,
     recycle_confirm_button_center,
     rect_center,
     sell_confirm_button_center,
-    title_roi,
     is_slot_empty,
 )
 
@@ -288,6 +286,9 @@ def scan_inventory(
 
                 infobox_rect: Optional[Tuple[int, int, int, int]] = None
                 window_bgr = None
+                infobox_ocr = None
+                sell_bbox_rel: Optional[Tuple[int, int, int, int]] = None
+                recycle_bbox_rel: Optional[Tuple[int, int, int, int]] = None
 
                 for _ in range(infobox_retries):
                     abort_if_escape_pressed()
@@ -299,14 +300,13 @@ def scan_inventory(
                     pause_action()
 
                 item_name = ""
-                infobox_crop = None
                 if infobox_rect and window_bgr is not None:
                     pause_action()
-                    title_x, title_y, title_w, title_h = title_roi(infobox_rect)
-                    title_crop = window_bgr[title_y:title_y + title_h, title_x:title_x + title_w]
-                    item_name = ocr_item_name(title_crop)
                     x, y, w, h = infobox_rect
-                    infobox_crop = window_bgr[y:y + h, x:x + w]
+                    infobox_ocr = ocr_infobox(window_bgr[y:y + h, x:x + w])
+                    item_name = infobox_ocr.item_name
+                    sell_bbox_rel = infobox_ocr.sell_bbox
+                    recycle_bbox_rel = infobox_ocr.recycle_bbox
 
                 decision: Optional[Decision] = None
                 decision_note: Optional[str] = None
@@ -325,8 +325,7 @@ def scan_inventory(
                 elif decision in {"KEEP", "CRAFTING MATERIAL"}:
                     action_taken = decision
                 elif decision == "SELL":
-                    if infobox_rect is not None and infobox_crop is not None:
-                        sell_bbox_rel, _ = find_action_bbox_by_ocr(infobox_crop, "sell")
+                    if infobox_rect is not None and infobox_ocr is not None:
                         if sell_bbox_rel is None:
                             action_taken = "SKIP_NO_ACTION_BBOX"
                         elif apply_actions:
@@ -337,8 +336,7 @@ def scan_inventory(
                     else:
                         action_taken = "SKIP_NO_INFOBOX"
                 elif decision == "RECYCLE":
-                    if infobox_rect is not None and infobox_crop is not None:
-                        recycle_bbox_rel, _ = find_action_bbox_by_ocr(infobox_crop, "recycle")
+                    if infobox_rect is not None and infobox_ocr is not None:
                         if recycle_bbox_rel is None:
                             action_taken = "SKIP_NO_ACTION_BBOX"
                         elif apply_actions:
