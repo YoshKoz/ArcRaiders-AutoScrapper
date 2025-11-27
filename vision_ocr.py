@@ -105,15 +105,7 @@ def find_infobox(bgr_image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
         _, best_rect = max(candidates, key=lambda item: item[0])
         return best_rect
 
-    # First try exact color match
-    mask_exact = (np.all(bgr_image == INFOBOX_COLOR_BGR, axis=2)).astype(np.uint8) * 255
-    mask_exact = cv2.morphologyEx(mask_exact, cv2.MORPH_CLOSE, kernel, iterations=1)
-    rect = _find_from_mask(mask_exact)
-    if rect:
-        return rect
-
-    # Fallback to tolerance-based mask
-    print("[vision_ocr] infobox exact color match not found; falling back to tolerance mask.", flush=True)
+    # Use tolerance-based mask around the expected infobox color
     lower = np.clip(INFOBOX_COLOR_BGR - INFOBOX_TOLERANCE, 0, 255).astype(np.uint8)
     upper = np.clip(INFOBOX_COLOR_BGR + INFOBOX_TOLERANCE, 0, 255).astype(np.uint8)
     mask_tol = cv2.inRange(bgr_image, lower, upper)
