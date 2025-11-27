@@ -227,10 +227,15 @@ def scroll_to_next_grid_at(
     """
     abort_if_escape_pressed()
     gx, gy = grid_center_abs
-    move_absolute(gx, gy, label="move to grid center before scroll", duration=SCROLL_MOVE_DURATION)
-
     scroll_clicks = -abs(clicks)
-    timed_action("vscroll", pdi.vscroll, scroll_clicks, _pause=False, interval=SCROLL_INTERVAL)
+
+    # Match the working standalone script: slow move into position, then vertical scroll.
+    pdi.moveTo(gx, gy, duration=SCROLL_MOVE_DURATION, _pause=False)
+    pause_action()
+    abort_if_escape_pressed()
+
+    print(f"[scroll] vscroll clicks={scroll_clicks} interval={SCROLL_INTERVAL} at=({gx},{gy})", flush=True)
+    pdi.vscroll(clicks=scroll_clicks, interval=SCROLL_INTERVAL, _pause=False)
     sleep_with_abort(SCROLL_SETTLE_DELAY)
 
     if safe_point_abs is not None:
