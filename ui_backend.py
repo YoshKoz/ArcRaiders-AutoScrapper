@@ -34,7 +34,7 @@ SELL_RECYCLE_MOVE_DURATION = MOVE_DURATION * SELL_RECYCLE_SPEED_MULT
 SELL_RECYCLE_ACTION_DELAY = ACTION_DELAY * SELL_RECYCLE_SPEED_MULT
 
 # Cell click positioning
-LAST_ROW_SAFE_Y_RATIO = 0.2
+LAST_ROW_SAFE_Y_RATIO = 0.05
 
 # Scrolling
 # Alternate 19/20 downward scroll clicks to advance between 6x4 grids.

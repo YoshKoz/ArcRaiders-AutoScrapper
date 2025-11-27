@@ -1,9 +1,11 @@
+mss
 numpy
 opencv-python
-pywinctl
-pytesseract
-pydirectinput-rgx
-tqdm
-mss
+Pillow
 pyautogui
+pydirectinput-rgx
+pywinctl
 rich
+tessdata.fast-eng
+tesserocr
+tqdm

@@ -7,9 +7,9 @@ from typing import Dict, List, Literal, Optional, Tuple
 
 import cv2
 import numpy as np
-import pytesseract
 
 from inventory_domain import clean_ocr_text
+from ocr_backend import image_to_data, image_to_string
 
 # Infobox visual characteristics
 INFOBOX_COLOR_BGR = np.array([223, 238, 249], dtype=np.uint8)  # #f9eedf in BGR
@@ -297,7 +297,7 @@ def _extract_action_line_bbox(
     target: Literal["sell", "recycle"],
 ) -> Optional[Tuple[int, int, int, int]]:
     """
-    Given pytesseract image_to_data output, return a bbox (left, top, w, h) for
+    Given OCR data, return a bbox (left, top, w, h) for
     the line containing the target action (infobox-relative coords).
     """
     groups: Dict[Tuple[int, int, int, int], List[int]] = {}
@@ -351,10 +351,10 @@ def find_action_bbox_by_ocr(
     """
     processed = preprocess_for_ocr(infobox_bgr)
     try:
-        data = pytesseract.image_to_data(processed, config="--psm 6", output_type=pytesseract.Output.DICT)
+        data = image_to_data(processed)
     except Exception as exc:
         print(
-            f"[vision_ocr] pytesseract image_to_data failed for target={target}; falling back to no bbox. "
+            f"[vision_ocr] ocr_backend image_to_data failed for target={target}; falling back to no bbox. "
             f"error={exc}",
             flush=True,
         )
@@ -375,11 +375,11 @@ def ocr_infobox(infobox_bgr: np.ndarray) -> InfoboxOcrResult:
     ocr_time = 0.0
     try:
         ocr_start = time.perf_counter()
-        data = pytesseract.image_to_data(processed, config="--psm 6", output_type=pytesseract.Output.DICT)
+        data = image_to_data(processed)
         ocr_time = time.perf_counter() - ocr_start
     except Exception as exc:
         print(
-            f"[vision_ocr] pytesseract image_to_data failed for full infobox; "
+            f"[vision_ocr] ocr_backend image_to_data failed for full infobox; "
             f"falling back to empty OCR result. error={exc}",
             flush=True,
         )
@@ -413,5 +413,5 @@ def ocr_item_name(roi_bgr: np.ndarray) -> str:
         return ""
 
     processed = preprocess_for_ocr(roi_bgr)
-    raw = pytesseract.image_to_string(processed, config="--psm 6")
+    raw = image_to_string(processed)
     return clean_ocr_text(raw)

@@ -9,20 +9,23 @@ Walks through each inventory item and applies Sell/Recycle decisions using only 
 
 ## Setup
 1) Install dependencies: `pip install -r requirements.txt`.
-2) You need [Tesseract](https://github.com/UB-Mannheim/tesseract/wiki#tesseract-installer-for-windows) installed. The script auto-detects common Windows install paths and the PATH entry; set `TESSERACT_CMD` to the full `tesseract.exe` path if you installed it elsewhere.
+2) Install tessdata: `pip install tessdata.fast-eng` (provides the `eng` tessdata bundle inside your Python environment).
+3) Install tesserocr for your Python/Windows build:
+   - Download the matching 64-bit wheel (e.g. `tesserocr-2.9.1-cp313-cp313-win_amd64.whl`) from https://github.com/simonflueckiger/tesserocr-windows_build/releases
+   - Install it with `pip install <wheel_filename>.whl`
 
-## Tesseract detection
-- On startup the script tries, in order: `TESSERACT_CMD` env var (if set), `tesseract.exe`/`tesseract` on `PATH`, registry hints, and common install folders such as `C:\Program Files\Tesseract-OCR\tesseract.exe`, `C:\Program Files (x86)\Tesseract-OCR\tesseract.exe`, and `%LOCALAPPDATA%\Tesseract-OCR\tesseract.exe`.
-- To override manually (per-shell session):
-  - Windows Terminal / PowerShell: `$env:TESSERACT_CMD = 'C:\Program Files\Tesseract-OCR\tesseract.exe'`
-  - cmd.exe: `set TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe`
-- Keep the full path in quotes if it contains spaces.
+No external `tesseract.exe` install or `TESSERACT_CMD` configuration is required; everything runs in-process via the tesserocr wheel and the tessdata from `tessdata.fast-eng`.
+
+## OCR backend
+- OCR uses `tesserocr` (Tesseract C API bindings) with tessdata discovered from `tessdata.fast-eng`.
+- A shared Tesseract engine is initialized with English and PSM 6; startup logs include the Tesseract version, tessdata path, and languages available.
+- The engine is loaded in-process, so the Windows `tesseract.exe` binary, PATH detection, and registry probing are no longer used or needed.
 
 ## Usage
 Main entrypoint: run `inventory_scanner.py` from the repo root.
 
 1) In Arc Raiders, open your inventory (ideally the “Crafting Materials” tab). Make sure you are scrolled all the way up.
-2) Run: `python3 inventory_scanner.py`
+2) Run: `python inventory_scanner.py`
 3) Alt-tab back into Arc Raiders; after a few seconds the script will start processing.
 4) Press Escape to abort (may need to press a few times).
 
@@ -30,5 +33,5 @@ Main entrypoint: run `inventory_scanner.py` from the repo root.
 See what the script would do without clicking Sell/Recycle (logs planned decisions such as `SELL`/`RECYCLE`):
 
 ```bash
-python3 inventory_scanner.py --dry-run
+python inventory_scanner.py --dry-run
 ```
