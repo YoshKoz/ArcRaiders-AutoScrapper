@@ -409,7 +409,7 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         "--scroll-clicks",
         type=int,
         default=SCROLL_CLICKS_PER_PAGE,
-        help="Scroll clicks to reach the next grid (positive scrolls downward).",
+        help="Scroll clicks to reach the next grid (negative scrolls downward).",
     )
     parser.add_argument(
         "--no-progress",
