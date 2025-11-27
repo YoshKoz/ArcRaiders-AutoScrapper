@@ -36,8 +36,6 @@ from inventory_domain import (
     load_item_actions,
 )
 from ui_backend import (
-    SELL_RECYCLE_ACTION_DELAY,
-    SELL_RECYCLE_MOVE_DURATION,
     SCROLL_CLICKS_PER_PAGE,
     WINDOW_TIMEOUT,
     abort_if_escape_pressed,
@@ -91,8 +89,6 @@ def _perform_sell(
         window_left,
         window_top,
         label="sell",
-        duration=SELL_RECYCLE_MOVE_DURATION,
-        pause=SELL_RECYCLE_ACTION_DELAY,
     )
     click_window_relative(
         sx,
@@ -100,7 +96,6 @@ def _perform_sell(
         window_left,
         window_top,
         label="sell",
-        pause=SELL_RECYCLE_ACTION_DELAY,
     )
     sleep_with_abort(MENU_APPEAR_DELAY)
 
@@ -109,10 +104,8 @@ def _perform_sell(
         cx,
         cy,
         label="sell confirm",
-        duration=SELL_RECYCLE_MOVE_DURATION,
-        pause=SELL_RECYCLE_ACTION_DELAY,
     )
-    click_absolute(cx, cy, label="sell confirm", pause=SELL_RECYCLE_ACTION_DELAY)
+    click_absolute(cx, cy, label="sell confirm")
 
 
 def _perform_recycle(
@@ -132,8 +125,6 @@ def _perform_recycle(
         window_left,
         window_top,
         label="recycle",
-        duration=SELL_RECYCLE_MOVE_DURATION,
-        pause=SELL_RECYCLE_ACTION_DELAY,
     )
     click_window_relative(
         rx,
@@ -141,7 +132,6 @@ def _perform_recycle(
         window_left,
         window_top,
         label="recycle",
-        pause=SELL_RECYCLE_ACTION_DELAY,
     )
     sleep_with_abort(MENU_APPEAR_DELAY)
 
@@ -150,10 +140,8 @@ def _perform_recycle(
         cx,
         cy,
         label="recycle confirm",
-        duration=SELL_RECYCLE_MOVE_DURATION,
-        pause=SELL_RECYCLE_ACTION_DELAY,
     )
-    click_absolute(cx, cy, label="recycle confirm", pause=SELL_RECYCLE_ACTION_DELAY)
+    click_absolute(cx, cy, label="recycle confirm")
 
 
 def _scroll_clicks_sequence(start_clicks: int) -> Iterable[int]:
