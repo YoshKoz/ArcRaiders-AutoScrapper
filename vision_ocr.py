@@ -12,8 +12,12 @@ from inventory_domain import clean_ocr_text
 # Infobox visual characteristics
 INFOBOX_COLOR_BGR = np.array([223, 238, 249], dtype=np.uint8)  # #f9eedf in BGR
 INFOBOX_TOLERANCE = 8
-MIN_INFOBOX_WIDTH = 230
-MIN_INFOBOX_HEIGHT = 80
+# Expected infobox size, normalized to the active window
+INFOBOX_TARGET_NORM_W = 0.132
+INFOBOX_TARGET_NORM_H = 0.268
+INFOBOX_SCALE_MIN = 0.8  # accept down to 80% of the expected size
+INFOBOX_MIN_NORM_W = INFOBOX_TARGET_NORM_W * INFOBOX_SCALE_MIN
+INFOBOX_MIN_NORM_H = INFOBOX_TARGET_NORM_H * INFOBOX_SCALE_MIN
 
 # Item title placement inside the infobox (relative to infobox size)
 TITLE_HEIGHT_REL = 0.18
@@ -93,12 +97,20 @@ def find_infobox(bgr_image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
     """
     kernel = np.ones((3, 3), np.uint8)
 
+    def _meets_min_infobox_size(w: int, h: int, window_width: int, window_height: int) -> bool:
+        if window_width <= 0 or window_height <= 0:
+            return False
+        norm_w = w / float(window_width)
+        norm_h = h / float(window_height)
+        return norm_w >= INFOBOX_MIN_NORM_W and norm_h >= INFOBOX_MIN_NORM_H
+
     def _find_from_mask(mask: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         candidates: List[Tuple[int, Tuple[int, int, int, int]]] = []
+        window_height, window_width = mask.shape[:2]
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
-            if w >= MIN_INFOBOX_WIDTH and h >= MIN_INFOBOX_HEIGHT:
+            if _meets_min_infobox_size(w, h, window_width, window_height):
                 candidates.append((w * h, (x, y, w, h)))
         if not candidates:
             return None
