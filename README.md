@@ -9,20 +9,11 @@ Walks through each inventory item and applies Sell/Recycle decisions using only 
 
 ## Setup
 1) Install dependencies: `pip install -r requirements.txt`.
-2) Install tessdata: `pip install tessdata.fast-eng` (provides the `eng` tessdata bundle inside your Python environment).
-3) Install tesserocr for your Python/Windows build:
+2) Install tesserocr for your Python/Windows build:
    - Download the matching 64-bit wheel (e.g. `tesserocr-2.9.1-cp313-cp313-win_amd64.whl`) from https://github.com/simonflueckiger/tesserocr-windows_build/releases
    - Install it with `pip install <wheel_filename>.whl`
 
-No external `tesseract.exe` install or `TESSERACT_CMD` configuration is required; everything runs in-process via the tesserocr wheel and the tessdata from `tessdata.fast-eng`.
-
-## OCR backend
-- OCR uses `tesserocr` (Tesseract C API bindings) with tessdata discovered from `tessdata.fast-eng`.
-- A shared Tesseract engine is initialized with English and PSM 6; startup logs include the Tesseract version, tessdata path, and languages available.
-- The engine is loaded in-process, so the Windows `tesseract.exe` binary, PATH detection, and registry probing are no longer used or needed.
-
 ## Usage
-Main entrypoint: run `inventory_scanner.py` from the repo root.
 
 1) In Arc Raiders, open your inventory (ideally the “Crafting Materials” tab). Make sure you are scrolled all the way up.
 2) Run: `python inventory_scanner.py`
