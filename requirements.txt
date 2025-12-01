@@ -1,4 +1,4 @@
-dxcam
+mss
 numpy
 opencv-python
 Pillow

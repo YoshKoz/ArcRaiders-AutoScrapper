@@ -66,6 +66,7 @@ from ui_backend import (
 )
 from ocr_backend import initialize_ocr
 from vision_ocr import (
+    enable_ocr_debug,
     find_infobox,
     ocr_infobox,
     recycle_confirm_button_center,
@@ -690,8 +691,25 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         action="store_true",
         help="Log per-item timing (capture, OCR, total) to identify bottlenecks.",
     )
+    parser.add_argument(
+        "--debug",
+        "--debug-ocr",
+        dest="debug_ocr",
+        action="store_true",
+        help="Save OCR input/processed images to ./ocr_debug for debugging.",
+    )
+    parser.add_argument(
+        "--debug-dir",
+        dest="debug_ocr_dir",
+        type=Path,
+        help="Directory for OCR debug images (implies --debug).",
+    )
 
     args = parser.parse_args(list(argv) if argv is not None else None)
+
+    if args.debug_ocr or args.debug_ocr_dir:
+        debug_dir = args.debug_ocr_dir or Path("ocr_debug")
+        enable_ocr_debug(debug_dir)
 
     try:
         initialize_ocr()

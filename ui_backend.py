@@ -5,18 +5,13 @@ import sys
 import time
 from typing import Optional, Tuple, TYPE_CHECKING
 
-import cv2
 import numpy as np
 import pywinctl as pwc
 import pydirectinput as pdi
-
-try:
-    import dxcam  # type: ignore
-except ImportError as exc:
-    raise ImportError("dxcam is required for screen capture; install it via requirements.txt.") from exc
+import mss
 
 if TYPE_CHECKING:
-    from dxcam import DXCamera
+    from mss.base import MSSBase
 
 from grid_navigation import Cell, Grid
 
@@ -51,8 +46,7 @@ try:
 except Exception:  # pragma: no cover - platform dependent
     _USER32 = None
 
-_DX_OUTPUT_COLOR = "BGR"
-_DXCAM: Optional["DXCamera"] = None
+_MSS: Optional["MSSBase"] = None
 
 
 def escape_pressed() -> bool:
@@ -119,19 +113,17 @@ def window_display_info(win: pwc.Window) -> Tuple[str, Tuple[int, int], Tuple[in
     return display_name, size, work_area
 
 
-def _get_dxcam() -> "DXCamera":
+def _get_mss() -> "MSSBase":
     """
-    Lazily create a dxcam instance for DirectX capture.
+    Lazily create an MSS instance for screen capture.
     """
-    global _DXCAM
+    global _MSS
     if sys.platform != "win32":
-        raise RuntimeError("DirectX capture requires Windows; this project is Windows-only.")
+        raise RuntimeError("Screen capture requires Windows; this project is Windows-only.")
 
-    if _DXCAM is None:
-        _DXCAM = dxcam.create(output_color=_DX_OUTPUT_COLOR)
-        if _DXCAM is None:
-            raise RuntimeError("dxcam failed to initialize; ensure DirectX 11+ and GPU drivers are available.")
-    return _DXCAM
+    if _MSS is None:
+        _MSS = mss.mss()
+    return _MSS
 
 
 def capture_region(region: Tuple[int, int, int, int]) -> np.ndarray:
@@ -139,13 +131,21 @@ def capture_region(region: Tuple[int, int, int, int]) -> np.ndarray:
     Capture a BGR screenshot of the given region (left, top, width, height).
     """
     left, top, width, height = region
-    camera = _get_dxcam()
-    frame = camera.grab(region=(left, top, left + width, top + height))
-    if frame is None:
-        raise RuntimeError("dxcam failed to capture the requested region.")
+    if width <= 0 or height <= 0:
+        raise ValueError(f"Invalid capture region size: width={width}, height={height}")
+
+    sct = _get_mss()
+    bbox = {"left": int(left), "top": int(top), "width": int(width), "height": int(height)}
+
+    try:
+        shot = sct.grab(bbox)
+    except Exception as exc:
+        raise RuntimeError(f"mss failed to capture the requested region {bbox}: {exc}") from exc
+
+    frame = np.asarray(shot)
     if frame.shape[2] == 4:
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGRA2BGR)
-    return frame
+        frame = frame[:, :, :3]  # drop alpha, keep BGR order
+    return np.ascontiguousarray(frame)
 
 
 def sleep_with_abort(duration: float) -> None:

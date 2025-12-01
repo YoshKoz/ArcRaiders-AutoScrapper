@@ -1,15 +1,15 @@
 # Arc Raiders Inventory Auto Scrapper
 
-Walks through each inventory item and applies Sell/Recycle decisions using only screenshots and OCR. It never hooks the game process, memory, or network; everything is DirectX screen capture plus simulated mouse input.
+Walks through each inventory item and applies Sell/Recycle decisions using only screenshots and OCR. It never hooks the game process, memory, or network; everything is MSS screen capture plus simulated mouse input.
 
 ## How it works
-- Captures the active Arc Raiders window via DirectX (dxcam) and pywinctl auto-detects which monitor the game is on (windowed, borderless, or fullscreen).
+- Captures the active Arc Raiders window via MSS and PyWinCtl auto-detects which monitor the game is on (windowed, borderless, or fullscreen).
 - Finds the item infobox, OCRs the title, and looks up the decision from `items/items_actions.json`.
 - Executes Sell/Recycle depending on the recommended action.
 - Press Escape to cancel (may need a couple presses)
 
 ## Setup
-Windows 10/11 is required (DirectX capture only). Keep Arc Raiders fully on a single monitor; pywinctl will log the detected display name and geometry automatically.
+Windows 10/11 is required (MSS capture only). Keep Arc Raiders fully on a single monitor; PyWinCtl will log the detected display name and geometry automatically.
 
 1) Install dependencies: `pip install -r requirements.txt`.
 2) Install tesserocr for your Python/Windows build:

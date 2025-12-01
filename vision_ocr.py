@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 import time
 from typing import Dict, List, Literal, Optional, Tuple
 
@@ -27,6 +28,8 @@ TITLE_HEIGHT_REL = 0.18
 # Confirmation buttons (window-normalized rectangles)
 SELL_CONFIRM_RECT_NORM = (0.5047, 0.6941, 0.1791, 0.0531)
 RECYCLE_CONFIRM_RECT_NORM = (0.5058, 0.6274, 0.1777, 0.0544)
+
+_OCR_DEBUG_DIR: Optional[Path] = None
 
 
 @dataclass
@@ -240,6 +243,35 @@ def preprocess_for_ocr(roi_bgr: np.ndarray) -> np.ndarray:
     return binary
 
 
+def enable_ocr_debug(debug_dir: Path) -> None:
+    """
+    Enable saving OCR debug images into the provided directory.
+    """
+    global _OCR_DEBUG_DIR
+    try:
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        _OCR_DEBUG_DIR = debug_dir
+        print(f"[vision_ocr] OCR debug output enabled at {_OCR_DEBUG_DIR}", flush=True)
+    except Exception as exc:  # pragma: no cover - filesystem dependent
+        print(f"[vision_ocr] failed to enable OCR debug dir: {exc}", flush=True)
+        _OCR_DEBUG_DIR = None
+
+
+def _save_debug_image(name: str, image: np.ndarray) -> None:
+    """
+    Write a debug image if a debug directory has been configured.
+    """
+    if _OCR_DEBUG_DIR is None:
+        return
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    filename = f"{timestamp}_{time.time_ns() % 1_000_000_000:09d}_{name}.png"
+    path = _OCR_DEBUG_DIR / filename
+    try:
+        cv2.imwrite(str(path), image)
+    except Exception as exc:  # pragma: no cover - filesystem dependent
+        print(f"[vision_ocr] failed to save debug image {path}: {exc}", flush=True)
+
+
 def _extract_title_from_data(
     ocr_data: Dict[str, List],
     image_height: int,
@@ -354,6 +386,7 @@ def find_action_bbox_by_ocr(
     action. Returns (bbox, processed_image) where bbox is infobox-relative.
     """
     processed = preprocess_for_ocr(infobox_bgr)
+    _save_debug_image(f"infobox_action_{target}_processed", processed)
     try:
         data = image_to_data(processed)
     except Exception as exc:
@@ -373,7 +406,9 @@ def ocr_infobox(infobox_bgr: np.ndarray) -> InfoboxOcrResult:
     OCR the full infobox once to derive the title and action line positions.
     """
     preprocess_start = time.perf_counter()
+    _save_debug_image("infobox_raw", infobox_bgr)
     processed = preprocess_for_ocr(infobox_bgr)
+    _save_debug_image("infobox_processed", processed)
     preprocess_time = time.perf_counter() - preprocess_start
 
     ocr_time = 0.0
