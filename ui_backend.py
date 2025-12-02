@@ -26,6 +26,7 @@ MOVE_DURATION = 0.05
 SELL_RECYCLE_SPEED_MULT = 1.5  # extra slack vs default pacing (MOVE_DURATION/ACTION_DELAY)
 SELL_RECYCLE_MOVE_DURATION = MOVE_DURATION * SELL_RECYCLE_SPEED_MULT
 SELL_RECYCLE_ACTION_DELAY = ACTION_DELAY * SELL_RECYCLE_SPEED_MULT
+LAST_ROW_MENU_DELAY_MULT = 4.0  # extra pause between left/right clicks on bottom row to keep infobox on-screen
 
 # Cell click positioning
 LAST_ROW_SAFE_Y_RATIO = 0.05
@@ -215,11 +216,12 @@ def open_cell_menu(cell: Cell, window_left: int, window_top: int) -> None:
     Hover the cell, then left-click and right-click to open its context menu.
     """
     abort_if_escape_pressed()
+    is_last_row = cell.row == Grid.ROWS - 1
     cx, cy = _cell_screen_center(cell, window_left, window_top)
     timed_action("moveTo", pdi.moveTo, cx, cy, duration=MOVE_DURATION)
     pause_action()
     timed_action("leftClick", pdi.leftClick, cx, cy, _pause=False)
-    pause_action()
+    pause_action(ACTION_DELAY * (LAST_ROW_MENU_DELAY_MULT if is_last_row else 1.0))
     timed_action("rightClick", pdi.rightClick, cx, cy, _pause=False)
     pause_action()
 
