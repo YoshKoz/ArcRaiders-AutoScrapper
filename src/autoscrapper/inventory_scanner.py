@@ -78,6 +78,7 @@ from .ocr.arc_inventory import (
     rect_center,
     sell_confirm_button_center,
 )
+from .config import load_scan_settings
 
 
 # ---------------------------------------------------------------------------
@@ -764,74 +765,105 @@ def _render_results(results: List[ItemActionResult], cells_per_page: int, stats:
 # CLI
 # ---------------------------------------------------------------------------
 
+def _positive_int_arg(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be an integer") from exc
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be >= 1")
+    return parsed
+
+
+def _non_negative_int_arg(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be an integer") from exc
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("must be >= 0")
+    return parsed
+
 def main(argv: Optional[Iterable[str]] = None) -> int:
+    settings = load_scan_settings()
+    pages_default = settings.pages if settings.pages_mode == "manual" else None
+    scroll_clicks_default = (
+        settings.scroll_clicks_per_page
+        if settings.scroll_clicks_per_page is not None
+        else SCROLL_CLICKS_PER_PAGE
+    )
+
     parser = argparse.ArgumentParser(description="Scan the ARC Raiders inventory grid(s).")
     parser.add_argument(
         "--pages",
-        type=int,
-        default=None,
+        type=_positive_int_arg,
+        default=pages_default,
         help="Override auto-detected page count; number of 6x4 grids to scan.",
     )
     parser.add_argument(
         "--scroll-clicks",
-        type=int,
-        default=SCROLL_CLICKS_PER_PAGE,
+        type=_non_negative_int_arg,
+        default=scroll_clicks_default,
         help="Initial scroll clicks to reach the next grid (alternates with +1 on following page).",
-    )
-    parser.add_argument(
-        "--no-progress",
-        action="store_true",
-        help="Disable tqdm progress bar output.",
-    )
-    parser.add_argument(
-        "--actions-file",
-        type=Path,
-        default=ITEM_ACTIONS_PATH,
-        help="Path to items_actions.json for keep/recycle/sell decisions.",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Scan only; log planned actions without clicking sell/recycle.",
     )
-    parser.add_argument(
+
+    profile_group = parser.add_mutually_exclusive_group()
+    profile_group.add_argument(
         "--profile",
+        dest="profile",
         action="store_true",
         help="Log per-item timing (capture, OCR, total) to identify bottlenecks.",
     )
-    parser.add_argument(
+    profile_group.add_argument(
+        "--no-profile",
+        dest="profile",
+        action="store_false",
+        help="Disable per-item profiling (ignores saved scan configuration).",
+    )
+    parser.set_defaults(profile=settings.profile)
+
+    debug_group = parser.add_mutually_exclusive_group()
+    debug_group.add_argument(
         "--debug",
         "--debug-ocr",
         dest="debug_ocr",
         action="store_true",
         help="Save OCR input/processed images to ./ocr_debug for debugging.",
     )
-    parser.add_argument(
-        "--debug-dir",
-        dest="debug_ocr_dir",
-        type=Path,
-        help="Directory for OCR debug images (implies --debug).",
+    debug_group.add_argument(
+        "--no-debug",
+        dest="debug_ocr",
+        action="store_false",
+        help="Disable OCR debug images (ignores saved scan configuration).",
     )
+    parser.set_defaults(debug_ocr=settings.debug_ocr)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
 
-    if args.debug_ocr or args.debug_ocr_dir:
-        debug_dir = args.debug_ocr_dir or Path("ocr_debug")
-        enable_ocr_debug(debug_dir)
+    if args.debug_ocr:
+        enable_ocr_debug(Path("ocr_debug"))
 
     try:
         initialize_ocr()
         results, stats = scan_inventory(
-            show_progress=not args.no_progress,
+            show_progress=True,
             pages=args.pages,
             scroll_clicks_per_page=args.scroll_clicks,
             apply_actions=not args.dry_run,
-            actions_path=args.actions_file,
+            actions_path=ITEM_ACTIONS_PATH,
             profile_timing=args.profile,
         )
     except KeyboardInterrupt:
         print("Aborted by Escape key.")
         return 0
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        return 1
     except TimeoutError as exc:
         print(exc)
         return 1
