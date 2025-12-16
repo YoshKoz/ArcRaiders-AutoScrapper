@@ -199,6 +199,8 @@ def _scroll_clicks_sequence(start_clicks: int) -> Iterable[int]:
 def scan_inventory(
     window_timeout: float = WINDOW_TIMEOUT,
     infobox_retries: int = INFOBOX_RETRIES,
+    ocr_unreadable_retries: int = 1,
+    ocr_unreadable_retry_delay_ms: int = 100,
     show_progress: bool = True,
     pages: Optional[int] = None,
     scroll_clicks_per_page: int = SCROLL_CLICKS_PER_PAGE,
@@ -217,6 +219,12 @@ def scan_inventory(
     OCR the always-visible stash count label to automatically determine how
     many 6x4 grids to scan.
     """
+    if infobox_retries < 1:
+        raise ValueError("infobox_retries must be >= 1")
+    if ocr_unreadable_retries < 0:
+        raise ValueError("ocr_unreadable_retries must be >= 0")
+    if ocr_unreadable_retry_delay_ms < 0:
+        raise ValueError("ocr_unreadable_retry_delay_ms must be >= 0")
     if pages is not None and pages < 1:
         raise ValueError("pages must be >= 1")
 
@@ -329,7 +337,7 @@ def scan_inventory(
                 grid = _detect_grid()
                 cells = list(grid)
 
-            empty_idx = _detect_first_empty_cell(
+            empty_idx = _detect_consecutive_empty_stop_idx(
                 page,
                 cells,
                 cells_per_page,
@@ -341,10 +349,11 @@ def scan_inventory(
             )
             if empty_idx is not None and (stop_at_global_idx is None or empty_idx < stop_at_global_idx):
                 stop_at_global_idx = empty_idx
+                first_empty_idx = max(0, empty_idx - 1)
                 detected_page = empty_idx // cells_per_page
                 detected_cell = empty_idx % cells_per_page
                 print(
-                    f"[empty] empty cell detected at idx={empty_idx:03d} "
+                    f"[empty] 2 consecutive empty cells detected at idx={first_empty_idx:03d},{empty_idx:03d} "
                     f"page={detected_page + 1:02d} cell={detected_cell:02d}"
                 )
 
@@ -403,13 +412,28 @@ def scan_inventory(
                 if infobox_rect and window_bgr is not None:
                     pause_action()
                     x, y, w, h = infobox_rect
-                    infobox_ocr = ocr_infobox(window_bgr[y:y + h, x:x + w])
-                    preprocess_time += infobox_ocr.preprocess_time
-                    ocr_time += infobox_ocr.ocr_time
-                    item_name = infobox_ocr.item_name
-                    raw_item_text = infobox_ocr.raw_item_text
-                    sell_bbox_rel = infobox_ocr.sell_bbox
-                    recycle_bbox_rel = infobox_ocr.recycle_bbox
+                    delay_seconds = ocr_unreadable_retry_delay_ms / 1000.0
+
+                    for ocr_attempt in range(ocr_unreadable_retries + 1):
+                        if ocr_attempt > 0:
+                            sleep_with_abort(delay_seconds)
+                            try:
+                                infobox_bgr = capture_region((win_left + x, win_top + y, w, h))
+                            except Exception:
+                                window_bgr = capture_region((win_left, win_top, win_width, win_height))
+                                infobox_bgr = window_bgr[y:y + h, x:x + w]
+                        else:
+                            infobox_bgr = window_bgr[y:y + h, x:x + w]
+
+                        infobox_ocr = ocr_infobox(infobox_bgr)
+                        preprocess_time += infobox_ocr.preprocess_time
+                        ocr_time += infobox_ocr.ocr_time
+                        item_name = infobox_ocr.item_name
+                        raw_item_text = infobox_ocr.raw_item_text
+                        sell_bbox_rel = infobox_ocr.sell_bbox
+                        recycle_bbox_rel = infobox_ocr.recycle_bbox
+                        if item_name:
+                            break
 
                 decision: Optional[Decision] = None
                 decision_note: Optional[str] = None
@@ -530,7 +554,7 @@ def scan_inventory(
 # Empty cell detection
 # ---------------------------------------------------------------------------
 
-def _detect_first_empty_cell(
+def _detect_consecutive_empty_stop_idx(
     page: int,
     cells: List[Cell],
     cells_per_page: int,
@@ -541,7 +565,12 @@ def _detect_first_empty_cell(
     safe_point_abs: Tuple[int, int],
 ) -> Optional[int]:
     """
-    Capture the current page and return the global index of the first empty cell.
+    Capture the current page and return the global index of the *second* empty cell
+    in the first run of two consecutive empty cells (row-major order).
+
+    This is a pragmatic compromise: a single empty cell can be a transient gap
+    (e.g., during item removal/collapse), but two empties in a row is a strong
+    signal that we've reached the end of items.
     """
     abort_if_escape_pressed()
 
@@ -551,14 +580,18 @@ def _detect_first_empty_cell(
 
     window_bgr = capture_region((window_left, window_top, window_width, window_height))
 
+    prev_empty = False
     for cell in cells:
         abort_if_escape_pressed()
         x, y, w, h = cell.safe_rect
         slot_bgr = window_bgr[y:y + h, x:x + w]
         if slot_bgr.size == 0:
+            prev_empty = False
             continue
-        if is_slot_empty(slot_bgr):
+        is_empty = is_slot_empty(slot_bgr)
+        if is_empty and prev_empty:
             return page * cells_per_page + cell.index
+        prev_empty = is_empty
 
     return None
 
@@ -857,6 +890,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
             apply_actions=not args.dry_run,
             actions_path=ITEM_ACTIONS_PATH,
             profile_timing=args.profile,
+            ocr_unreadable_retries=settings.ocr_unreadable_retries,
+            ocr_unreadable_retry_delay_ms=settings.ocr_unreadable_retry_delay_ms,
         )
     except KeyboardInterrupt:
         print("Aborted by Escape key.")
