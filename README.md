@@ -1,69 +1,62 @@
 # Arc Raiders Inventory Auto Scrapper
 
-Walks through each inventory item and applies Sell/Recycle decisions using only screenshots and OCR. It never hooks the game process, memory, or network; everything is screen capture plus simulated mouse input.
+Automates Arc Raiders inventory actions (Sell/Recycle) using screen capture + OCR + simulated mouse input.
+It never hooks the game process, memory, or network.
 
-## How it works
-- Captures the active Arc Raiders window via MSS and PyWinCtl auto-detects which monitor the game is on (windowed, borderless, or fullscreen).
-- Finds the item infobox, OCRs the title, and looks up the decision from your rules file (`src/autoscrapper/items/items_actions.json` in this repo).
-- Executes Sell/Recycle depending on the recommended action.
-- Press Escape to cancel (may need a couple presses).
+## Support
+- Windows 10/11: supported
+- Linux: experimental/untested (native X11/XWayland only)
+- WSL is not supported
+
+Python 3.10–3.13 is supported (3.13 recommended). Python 3.14 is not supported.
 
 ## Setup
-Windows 10/11 is required (window detection + input automation rely on Windows APIs). Python 3.10 - 3.13 recommended.
+This repo uses `uv` to manage Python + dependencies.
 
-1) Create and activate a virtualenv in the repo root:
-   - `python -m venv .venv`
-   - PowerShell: `.\\.venv\\Scripts\\Activate.ps1`
-   - Command Prompt: `.\\.venv\\Scripts\\activate.bat`
-2) Install tesserocr for your Python/Windows build:
-   - Download the matching 64-bit wheel (e.g. `tesserocr-2.9.1-cp313-cp313-win_amd64.whl`) from https://github.com/simonflueckiger/tesserocr-windows_build/releases
-   - Install it with `pip install <wheel_filename>.whl`
-3) Install the package (and all other dependencies) in editable mode from the repo root:
-   - `pip install -e .`
+Key dependencies:
+- OCR: `tesserocr` (required)
+  - Windows: installed automatically via the matching prebuilt wheel (handled by `uv`)
+  - Linux: builds against system `tesseract`/`leptonica` (installed by the Linux setup script)
+- Input injection:
+  - Windows: `pydirectinput-rgx`
+  - Linux: `pynput`
+
+### Clone the repo
+From a terminal (PowerShell/CMD on Windows, bash on Linux):
+- `git clone https://github.com/zappybiby/ArcRaiders-AutoScrapper.git`
+- `cd ArcRaiders-AutoScrapper`
+
+### Windows 10/11 (64-bit)
+From the repo root (PowerShell or CMD):
+- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-windows.ps1`
+- Optional (use a different supported Python): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-windows.ps1 -PythonVersion 3.12`
+
+### Linux (experimental/untested)
+Ubuntu/Debian (apt-get) on a native X11/XWayland desktop only. WSL is not supported.
+
+From the repo root:
+- `bash scripts/setup-linux.sh`
+- Optional (use a different supported Python): `AUTOSCRAPPER_PYTHON_VERSION=3.12 bash scripts/setup-linux.sh`
 
 ## Usage
 
-Launch options (after the editable install):
+Common commands:
+- `uv run autoscrapper` (interactive menu)
+- `uv run autoscrapper scan`
+- `uv run autoscrapper rules`
+- `uv run autoscrapper config`
+- `uv run autoscrapper scan --help`
 
-```
-python -m autoscrapper           # Interactive menu
-python -m autoscrapper scan      # Start the inventory scan directly
-python -m autoscrapper rules     # Open the item rules editor
-python -m autoscrapper progress  # Stub for future progress editing
-python -m autoscrapper config    # Edit scan configuration (persisted)
-```
+Before you scan:
+- Open your inventory (ideally “Crafting Materials”), scroll to the top, and keep the game window fully on one monitor.
+- Press Escape to abort (may need multiple presses).
 
-Typical scan flow:
-1) In Arc Raiders, open your inventory (ideally the “Crafting Materials” tab). Make sure you are scrolled all the way up and the game window is entirely on one monitor.
-2) Run: `python -m autoscrapper scan`
-3) Alt-tab back into Arc Raiders quickly; after a few seconds the script will log the display it detected and start processing.
-4) Press Escape to abort (may need to press a few times).
-
-### Dry run
-See what the script would do without clicking Sell/Recycle (logs planned decisions such as `SELL`/`RECYCLE`):
-
-```bash
-python -m autoscrapper scan --dry-run
-```
-
-## Scan configuration
-The interactive menu includes **Scan configuration** to persist scan defaults for future runs (pages, scroll clicks, debug OCR, profiling).
-By default, if an item title OCR is unreadable, the scanner retries once after 100ms; you can change this in **Scan configuration**.
-
-You can also run it directly: `python -m autoscrapper config`. CLI flags always override the saved defaults for that run.
-
-Settings are stored at `%APPDATA%\\AutoScrapper\\config.json` on Windows.
-
-## Item rules CLI
-Manage the keep/recycle/sell rules stored in `src/autoscrapper/items/items_actions.json`:
-
-```bash
-python -m autoscrapper rules
-```
-
-You can view all rules, view a specific item by name or index, add new items, edit existing ones, or remove entries.
+Linux notes (experimental):
+- Requires a native desktop session under X11/XWayland (Proton is fine). Pure Wayland sessions may not support window detection/input injection.
+- Default target window title is `Arc Raiders`. Override with `AUTOSCRAPPER_TARGET_APP` if needed.
 
 ## CLI options (scan)
+Run `uv run autoscrapper scan --help` for the full list.
 - `--pages INT` override auto-detected 6x4 page count to scan.
 - `--scroll-clicks INT` initial scroll clicks between grids (alternates with +1 on the next page).
 - `--dry-run` log planned actions without clicking Sell/Recycle.
@@ -71,8 +64,3 @@ You can view all rules, view a specific item by name or index, add new items, ed
 - `--no-profile` disable per-item timing logs (overrides saved scan configuration).
 - `--debug` / `--debug-ocr` save OCR debug images to `./ocr_debug`.
 - `--no-debug` disable OCR debug images (overrides saved scan configuration).
-
-## Contributing
-Black is the formatter for this codebase and should be used for all contributions.
-- Install: `python -m pip install black`
-- Format a file: `python -m black path/to/file.py`
