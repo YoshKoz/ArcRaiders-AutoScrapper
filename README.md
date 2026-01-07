@@ -13,14 +13,6 @@ Python 3.10–3.13 is supported (3.13 recommended). Python 3.14 is not supported
 ## Setup
 This repo uses `uv` to manage Python + dependencies.
 
-Key dependencies:
-- OCR: `tesserocr` (required)
-  - Windows: installed automatically via the matching prebuilt wheel (handled by `uv`)
-  - Linux: builds against system `tesseract`/`leptonica` (installed by the Linux setup script)
-- Input injection:
-  - Windows: `pydirectinput-rgx`
-  - Linux: `pynput`
-
 ### Clone the repo
 From a terminal (PowerShell/CMD on Windows, bash on Linux):
 - `git clone https://github.com/zappybiby/ArcRaiders-AutoScrapper.git`
@@ -32,8 +24,6 @@ From the repo root (PowerShell or CMD):
 - Optional (use a different supported Python): `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-windows.ps1 -PythonVersion 3.12`
 
 ### Linux (experimental/untested)
-Ubuntu/Debian (apt-get) on a native X11/XWayland desktop only. WSL is not supported.
-
 From the repo root:
 - `bash scripts/setup-linux.sh`
 - Optional (use a different supported Python): `AUTOSCRAPPER_PYTHON_VERSION=3.12 bash scripts/setup-linux.sh`
