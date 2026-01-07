@@ -42,7 +42,6 @@ Before you scan:
 - Press Escape to abort (may need multiple presses).
 
 Linux notes (experimental):
-- Requires a native desktop session under X11/XWayland (Proton is fine). Pure Wayland sessions may not support window detection/input injection.
 - Default target window title is `Arc Raiders`. Override with `AUTOSCRAPPER_TARGET_APP` if needed.
 
 ## CLI options (scan)
