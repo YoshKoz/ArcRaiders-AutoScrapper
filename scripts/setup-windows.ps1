@@ -63,41 +63,117 @@ if (-not (Test-Path -Path "pyproject.toml")) {
 }
 
 # 1) Install uv (if missing)
-if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-  $uvInstallUrl = "https://astral.sh/uv/install.ps1"
+$uvInstallUrl = "https://astral.sh/uv/install.ps1"
+$uvHome = if ($HOME) { $HOME } elseif ($env:USERPROFILE) { $env:USERPROFILE } else { "." }
+$uvInstallDir = Join-Path $uvHome ".local/bin"
+$uvExe = $null
 
-  Confirm-OrAbort (Confirm-Step `
-    -Title "Step 1: Install uv (required)" `
-    -Commands @("irm $uvInstallUrl | iex") `
+function Prepend-Path {
+  param(
+    [Parameter(Mandatory)]
+    [string]$Dir
   )
 
-  irm $uvInstallUrl | iex
+  $dirNormalized = $Dir.Trim().TrimEnd('\\')
+  if (-not $dirNormalized) {
+    return
+  }
+
+  $parts = @()
+  if ($env:Path) {
+    $parts = $env:Path -split ';'
+  }
+
+  foreach ($part in $parts) {
+    if ($part.Trim().TrimEnd('\\') -ieq $dirNormalized) {
+      return
+    }
+  }
+
+  if ($env:Path) {
+    $env:Path = "$dirNormalized;$env:Path"
+  } else {
+    $env:Path = $dirNormalized
+  }
 }
 
-if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-  Write-Error "uv is still not on PATH. Close/reopen PowerShell, then re-run this script."
-  exit 1
+$existingUv = Get-Command uv -ErrorAction SilentlyContinue
+if ($existingUv -and ($existingUv.CommandType -eq "Application") -and $existingUv.Path) {
+  $uvExe = $existingUv.Path
+}
+
+if (-not $uvExe) {
+  Confirm-OrAbort (Confirm-Step `
+    -Title "Step 1: Install uv (required)" `
+    -Commands @(
+      ('$env:UV_INSTALL_DIR = "' + $uvInstallDir + '"'),
+      "irm $uvInstallUrl | iex"
+    ) `
+  )
+
+  $previousUvInstallDir = $env:UV_INSTALL_DIR
+  $env:UV_INSTALL_DIR = $uvInstallDir
+  irm $uvInstallUrl | iex
+
+  if ($null -ne $previousUvInstallDir) {
+    $env:UV_INSTALL_DIR = $previousUvInstallDir
+  } else {
+    Remove-Item Env:UV_INSTALL_DIR -ErrorAction SilentlyContinue
+  }
+
+  $candidateDirs = @(
+    $uvInstallDir,
+    $env:XDG_BIN_HOME,
+    $(if ($env:XDG_DATA_HOME) { Join-Path $env:XDG_DATA_HOME "../bin" } else { $null }),
+    $(if ($env:CARGO_HOME) { Join-Path $env:CARGO_HOME "bin" } else { Join-Path $uvHome ".cargo/bin" })
+  ) | Where-Object { $_ } | Select-Object -Unique
+
+  $searched = @()
+  foreach ($dir in $candidateDirs) {
+    $candidate = Join-Path $dir "uv.exe"
+    $searched += $candidate
+    if (Test-Path -Path $candidate -PathType Leaf) {
+      $uvExe = $candidate
+      break
+    }
+  }
+
+  if (-not $uvExe) {
+    Write-Error ("Couldn't find uv.exe after installing it. Looked in:`n  " + ($searched -join "`n  "))
+    Write-Error "Install folder used: $uvInstallDir"
+    Write-Error "Close and reopen PowerShell, then run this script again."
+    exit 1
+  }
+
+  Prepend-Path (Split-Path -Parent $uvExe)
+
+  if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    Write-Error "uv still isn't working in this PowerShell window."
+    Write-Error "Install folder used: $uvInstallDir"
+    Write-Error ("Looked in:`n  " + ($searched -join "`n  "))
+    exit 1
+  }
 }
 
 # 2) We recommend Python 3.13 but support Python 3.10 to 3.13
 Confirm-OrAbort (Confirm-Step `
-  -Title "Step 2: Install Python $PythonVersion (uv)" `
-  -Commands @("uv python install $PythonVersion") `
+  -Title "Step 2: Install Python $PythonVersion" `
+  -Commands @('& "' + $uvExe + '" python install ' + $PythonVersion) `
 )
-uv python install $PythonVersion
+& $uvExe python install $PythonVersion
 
 Confirm-OrAbort (Confirm-Step `
-  -Title "Step 2: Pin Python $PythonVersion (uv)" `
-  -Commands @("uv python pin $PythonVersion") `
+  -Title "Step 3: Pin Python $PythonVersion" `
+  -Commands @('& "' + $uvExe + '" python pin ' + $PythonVersion) `
 )
-uv python pin $PythonVersion
+& $uvExe python pin $PythonVersion
 
 # 3) Install project dependencies with uv
 Confirm-OrAbort (Confirm-Step `
-  -Title "Step 3: Install project dependencies (uv sync)" `
-  -Commands @("uv sync") `
+  -Title "Step 4: Install project dependencies" `
+  -Commands @('& "' + $uvExe + '" sync') `
 )
-uv sync
+& $uvExe sync
 
 Write-Host "Setup finished. Run:"
 Write-Host "  uv run autoscrapper"
