@@ -1,6 +1,7 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/9f5d3723-1b8e-49a7-9cd5-c10c798795d8" alt="autoscrapper_logo4">
+  <img src="https://github.com/user-attachments/assets/c1de27b2-4dd9-4d04-855a-b4faa4e9dd1a" alt="autoscrapper_logo4">
 </p>
+
 
 
 ## Arc Raiders Inventory Auto Scrapper
