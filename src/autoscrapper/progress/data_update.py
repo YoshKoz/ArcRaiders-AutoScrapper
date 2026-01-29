@@ -131,9 +131,11 @@ def _map_metaforge_item(
         "id": metaforge_item.get("id"),
         "name": metaforge_item.get("name"),
         "type": metaforge_item.get("item_type") or "Unknown",
-        "rarity": str(metaforge_item.get("rarity")).lower()
-        if metaforge_item.get("rarity")
-        else None,
+        "rarity": (
+            str(metaforge_item.get("rarity")).lower()
+            if metaforge_item.get("rarity")
+            else None
+        ),
         "value": metaforge_item.get("value") or 0,
         "weightKg": stat_block.get("weight") or 0,
         "stackSize": stat_block.get("stackSize") or 1,
@@ -196,12 +198,9 @@ def update_data_snapshot(data_dir: Optional[Path] = None) -> dict:
     recycle_map = _build_component_map(recycle_components)
 
     mapped_items = [
-        _map_metaforge_item(item, crafting_map, recycle_map)
-        for item in metaforge_items
+        _map_metaforge_item(item, crafting_map, recycle_map) for item in metaforge_items
     ]
-    mapped_quests = [
-        _map_metaforge_quest(quest) for quest in metaforge_quests
-    ]
+    mapped_quests = [_map_metaforge_quest(quest) for quest in metaforge_quests]
     mapped_quests = apply_quest_overrides(mapped_quests)
 
     (data_dir / "items.json").write_text(

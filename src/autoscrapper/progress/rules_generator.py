@@ -45,7 +45,9 @@ def generate_rules_from_active(
 
     active_resolved: List[dict] = []
     if all_quests_completed:
-        completed_quests = [quest.get("id") for quest in game_data.quests if quest.get("id")]
+        completed_quests = [
+            quest.get("id") for quest in game_data.quests if quest.get("id")
+        ]
     else:
         quests_by_trader = group_quests_by_trader(game_data.quests)
         quest_index = build_quest_index(quests_by_trader)

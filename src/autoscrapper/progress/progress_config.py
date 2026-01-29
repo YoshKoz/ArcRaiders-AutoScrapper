@@ -56,7 +56,9 @@ def normalize_hideout_levels(
         try:
             level_num = int(raw_level)
         except (TypeError, ValueError):
-            raise ValueError(f"Invalid hideout level for '{raw_key}': {raw_level}") from None
+            raise ValueError(
+                f"Invalid hideout level for '{raw_key}': {raw_level}"
+            ) from None
         if level_num < 0:
             raise ValueError(f"Invalid hideout level for '{raw_key}': {raw_level}")
 
@@ -84,7 +86,7 @@ def group_quests_by_trader(quests: List[dict]) -> Dict[str, List[dict]]:
 
 
 def build_quest_index(
-    quests_by_trader: Dict[str, List[dict]]
+    quests_by_trader: Dict[str, List[dict]],
 ) -> Tuple[Dict[str, dict], Dict[str, dict]]:
     by_id: Dict[str, dict] = {}
     by_name: Dict[str, dict] = {}

@@ -73,7 +73,9 @@ def load_game_data(data_dir: Optional[Path] = None) -> GameData:
     )
 
 
-def _apply_price_overrides(items: List[dict], price_overrides: Optional[dict]) -> List[dict]:
+def _apply_price_overrides(
+    items: List[dict], price_overrides: Optional[dict]
+) -> List[dict]:
     if not price_overrides or not isinstance(price_overrides.get("overrides"), dict):
         return items
     overrides = price_overrides.get("overrides", {})
