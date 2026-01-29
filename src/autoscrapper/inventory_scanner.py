@@ -104,7 +104,6 @@ from .ocr.inventory_vision import (
 )
 from .config import load_scan_settings
 
-
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -744,9 +743,7 @@ AUTOSCRAPPER_ASCII = r"""
  / __ / // / __/ _ \_\ \/ __/ __/ _ `/ _ \/ _ \/ -_) __/
 /_/ |_\_,_/\__/\___/___/\__/_/  \_,_/ .__/ .__/\__/_/
                                    /_/  /_/
-""".strip(
-    "\n"
-)
+""".strip("\n")
 
 
 def _format_duration(seconds: Optional[float]) -> str:
