@@ -18,6 +18,8 @@ from ..config import (
     save_progress_settings,
 )
 from ..core.item_actions import ITEM_RULES_CUSTOM_PATH
+from ..items.rules_cli import DEFAULT_RULES_PATH, load_rules
+from ..items.rules_diff import RuleChange, collect_rule_changes
 from ..progress.data_loader import load_game_data
 from ..progress.progress_config import (
     build_quest_index,
@@ -565,9 +567,17 @@ class ProgressSummaryScreen(ProgressScreen):
 
         write_rules(output, ITEM_RULES_CUSTOM_PATH)
         item_count = output.get("metadata", {}).get("itemCount", 0)
+        default_payload = load_rules(DEFAULT_RULES_PATH)
+        changes = collect_rule_changes(default_payload, output)
+        default_items = default_payload.get("items")
+        default_count = len(default_items) if isinstance(default_items, list) else 0
         _pop_progress_stack(self.app)
         self.app.push_screen(
-            MessageScreen(f"Rules generated successfully. Items: {item_count}.")
+            RulesChangesScreen(
+                changes,
+                item_count=item_count,
+                default_count=default_count,
+            )
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -575,6 +585,162 @@ class ProgressSummaryScreen(ProgressScreen):
             self.app.pop_screen()
         elif event.button.id == "save":
             self._save()
+
+
+class RulesChangesScreen(AppScreen):
+    DEFAULT_CSS = """
+    RulesChangesScreen {
+        padding: 1 2;
+    }
+
+    #changes-layout {
+        height: 1fr;
+    }
+
+    #changes-list {
+        width: 55%;
+    }
+
+    #changes-detail {
+        width: 45%;
+        padding-left: 1;
+    }
+
+    #changes-actions {
+        margin-top: 1;
+        height: auto;
+    }
+
+    .hint {
+        color: $text-muted;
+    }
+    """
+
+    def __init__(
+        self,
+        changes: List[RuleChange],
+        *,
+        item_count: int,
+        default_count: int,
+    ) -> None:
+        super().__init__()
+        self.changes = list(changes)
+        self.filtered: List[int] = []
+        self.search_query = ""
+        self.selected_index: Optional[int] = None
+        self.item_count = item_count
+        self.default_count = default_count
+
+    def compose(self) -> ComposeResult:
+        yield Static("Rule Changes", classes="menu-title")
+        yield Static(id="changes-summary", classes="hint")
+        yield Input(placeholder="Search changes by name or id", id="changes-search")
+        with Horizontal(id="changes-layout"):
+            yield OptionList(id="changes-list")
+            with Vertical(id="changes-detail"):
+                yield Static(id="changes-detail-body")
+        with Horizontal(id="changes-actions"):
+            yield Button("Done", id="done", variant="primary")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        self._refresh_list()
+        self._refresh_details()
+        if self.changes:
+            self.query_one("#changes-list", OptionList).focus()
+
+    def _update_summary(self) -> None:
+        total_changes = len(self.changes)
+        showing = len(self.filtered)
+        base_total = self.default_count or self.item_count
+        summary = (
+            f"Changed rules: {total_changes} | "
+            f"Default items: {base_total} | "
+            f"Showing: {showing}"
+        )
+        self.query_one("#changes-summary", Static).update(summary)
+
+    def _filter_indices(self) -> List[int]:
+        if not self.search_query:
+            return list(range(len(self.changes)))
+        q = self.search_query.lower().strip()
+        if not q:
+            return list(range(len(self.changes)))
+        matches: List[int] = []
+        for idx, change in enumerate(self.changes):
+            name = change.name.lower()
+            item_id = change.item_id.lower()
+            if q in name or (item_id and q in item_id):
+                matches.append(idx)
+        return matches
+
+    def _option_label(self, change: RuleChange, index: int) -> Text:
+        action = f"{change.before_action.upper()} -> {change.after_action.upper()}"
+        return Text.assemble(
+            (f"{index + 1:>3} ", "dim"),
+            (change.name, "bold"),
+            ("  ", ""),
+            (action, "cyan"),
+        )
+
+    def _refresh_list(self) -> None:
+        self.filtered = self._filter_indices()
+        menu = self.query_one("#changes-list", OptionList)
+        options = []
+        for list_index, change_index in enumerate(self.filtered):
+            change = self.changes[change_index]
+            label = self._option_label(change, list_index)
+            options.append(Option(label, id=str(change_index)))
+        menu.set_options(options)
+        if options:
+            menu.highlighted = 0
+            self.selected_index = self.filtered[0]
+        else:
+            self.selected_index = None
+        self._update_summary()
+
+    def _refresh_details(self) -> None:
+        detail = self.query_one("#changes-detail-body", Static)
+        if self.selected_index is None:
+            detail.update(
+                "No changes match your filter."
+                if self.changes
+                else "No changes detected."
+            )
+            return
+        change = self.changes[self.selected_index]
+        lines = [
+            f"Name: {change.name}",
+            f"ID: {change.item_id}",
+            f"Action: {change.before_action.upper()} -> {change.after_action.upper()}",
+        ]
+        if change.reasons:
+            lines.append("Reasons:")
+            lines.extend([f"- {reason}" for reason in change.reasons[:8]])
+            if len(change.reasons) > 8:
+                lines.append(f"- ... +{len(change.reasons) - 8} more")
+        else:
+            lines.append("Reasons: none recorded")
+        detail.update("\n".join(lines))
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if event.input.id == "changes-search":
+            self.search_query = event.value
+            self._refresh_list()
+            self._refresh_details()
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        if event.option_id is None:
+            return
+        try:
+            self.selected_index = int(event.option_id)
+        except ValueError:
+            return
+        self._refresh_details()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "done":
+            self.app.pop_screen()
 
 
 class ReviewQuestsScreen(ProgressScreen):
