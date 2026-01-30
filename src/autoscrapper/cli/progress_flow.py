@@ -31,6 +31,7 @@ from ..progress.progress_config import (
 from ..progress.rules_generator import generate_rules_from_active, write_rules
 from ..items.rules_viewer import run_rules_viewer
 from .key_reader import key_reader
+from .menu import choose_menu_action
 from .ui_utils import window_for_cursor
 
 
@@ -635,14 +636,20 @@ def run_progress_wizard(console: Optional[Console] = None) -> int:
     _display_rules_summary(console, output)
 
     if Confirm.ask("Review quests/workshops/rules now?", default=False):
+        actions = {
+            "1": "Review quests",
+            "2": "Edit workshop levels",
+            "3": "Review / edit rules",
+            "b": "Back",
+        }
         while True:
-            table = Table(show_header=False, box=None)
-            table.add_row("[cyan]1[/cyan]", "Review quests")
-            table.add_row("[cyan]2[/cyan]", "Edit workshop levels")
-            table.add_row("[cyan]3[/cyan]", "Review / edit rules")
-            table.add_row("[cyan]b[/cyan]", "Back")
-            console.print(table)
-            choice = Prompt.ask("Choose an option", default="b")
+            choice = choose_menu_action(
+                console,
+                "Review progress",
+                actions,
+                default_key="b",
+                prompt="Choose an option",
+            )
             if choice == "1":
                 review_saved_quests(console)
                 continue
@@ -678,22 +685,27 @@ def run_update_data(console: Console) -> int:
 
 def show_progress_menu(console: Optional[Console] = None) -> int:
     console = console or Console()
+    actions = {
+        "1": "Set up / update progress",
+        "2": "Review quests",
+        "3": "Edit workshop levels",
+        "4": "Generate rules from saved progress",
+        "5": "Update game data snapshot",
+        "6": "Reset saved progress",
+        "b": "Back",
+    }
     while True:
-        console.print("\n[bold cyan]Game Progress[/bold cyan]")
+        console.print()
         _render_snapshot_status(console)
         _render_progress_status(console, load_progress_settings())
 
-        table = Table(show_header=False, box=None)
-        table.add_row("[cyan]1[/cyan]", "Set up / update progress")
-        table.add_row("[cyan]2[/cyan]", "Review quests")
-        table.add_row("[cyan]3[/cyan]", "Edit workshop levels")
-        table.add_row("[cyan]4[/cyan]", "Generate rules from saved progress")
-        table.add_row("[cyan]5[/cyan]", "Update game data snapshot")
-        table.add_row("[cyan]6[/cyan]", "Reset saved progress")
-        table.add_row("[cyan]b[/cyan]", "Back")
-        console.print(table)
-
-        choice = Prompt.ask("Choose an option", default="b")
+        choice = choose_menu_action(
+            console,
+            "Game Progress",
+            actions,
+            default_key="b",
+            prompt="Choose an option",
+        )
         if choice == "1":
             run_progress_wizard(console)
             continue

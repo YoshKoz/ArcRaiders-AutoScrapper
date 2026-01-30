@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from rich.console import Console
+
 from ..config import (
     ScanSettings,
     config_path,
@@ -10,6 +12,7 @@ from ..config import (
     save_scan_settings,
 )
 from ..interaction.ui_windows import SCROLL_CLICKS_PER_PAGE
+from .menu import choose_menu_action, menu_help_text
 
 
 def _format_settings(settings: ScanSettings) -> list[str]:
@@ -52,16 +55,28 @@ def _prompt_int(prompt: str, *, min_value: int) -> int:
 
 def main(argv=None) -> int:
     _ = argv
+    console = Console()
     while True:
         settings = load_scan_settings()
-        print("\nScan Configuration (persists across sessions)\n")
-        for idx, line in enumerate(_format_settings(settings), start=1):
-            print(f"  {idx}) {line}")
-        print("  7) Reset all to defaults")
-        print("  b) Back\n")
-        print(f"Config file: {config_path()}\n")
+        items = _format_settings(settings)
+        actions = {str(idx): line for idx, line in enumerate(items, start=1)}
+        actions["7"] = "Reset all to defaults"
+        actions["b"] = "Back"
 
-        choice = input("Select an option: ").strip().lower()
+        help_text = menu_help_text(actions)
+        help_text.append("\n")
+        help_text.append("Persists across sessions", style="dim")
+        help_text.append("\n")
+        help_text.append(f"Config file: {config_path()}", style="dim")
+
+        choice = choose_menu_action(
+            console,
+            "Scan Configuration",
+            actions,
+            default_key="1",
+            prompt="Select an option",
+            help_text=help_text,
+        )
         if choice == "b":
             return 0
 

@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-import sys
 from typing import Callable, Optional
 
 from rich import box
 from rich.console import Console, Group
-from rich.live import Live
 from rich.panel import Panel
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Confirm
 from rich.table import Table
 from rich.text import Text
 
@@ -31,7 +29,7 @@ from .progress_flow import (
     run_update_data,
 )
 from ..items.rules_viewer import run_rules_viewer
-from .key_reader import key_reader
+from .menu import choose_menu_action
 from .warnings import maybe_warn_default_rules
 
 MenuHandler = Callable[[], object]
@@ -86,7 +84,7 @@ def _format_snapshot_status() -> str:
     return _format_timestamp(last_updated) or str(last_updated)
 
 
-def _render_status_panel(console: Console, progress_settings: ProgressSettings) -> None:
+def _build_status_panel(progress_settings: ProgressSettings) -> Panel:
     status_table = Table.grid(padding=(0, 1))
     status_table.add_column(justify="right", style="bold")
     status_table.add_column()
@@ -102,145 +100,13 @@ def _render_status_panel(console: Console, progress_settings: ProgressSettings) 
         )
 
     body = Group(status_table, tip) if tip else status_table
-    console.print(
-        Panel(
-            body,
-            title=Text("Autoscrapper", style="bold cyan"),
-            border_style="cyan",
-            box=box.ROUNDED,
-            padding=(1, 2),
-        )
-    )
-
-
-def _render_menu_panel(
-    title: str,
-    actions: dict[str, str],
-    *,
-    default_key: str,
-    selected_key: Optional[str] = None,
-    border_style: str = "cyan",
-    help_text: Optional[Text] = None,
-) -> Panel:
-    table = Table.grid(padding=(0, 1))
-    table.add_column(justify="right", width=4)
-    table.add_column()
-
-    for key, label in actions.items():
-        is_default = key == default_key
-        is_selected = key == selected_key
-        key_style = "bold yellow" if is_default else "bold cyan"
-        label_text = Text(label, style="bold" if is_default else "")
-        if is_default:
-            label_text.append("  (recommended)", style="dim")
-        row_style = "reverse" if is_selected else None
-        table.add_row(Text(key, style=key_style), label_text, style=row_style)
-
-    body = Group(table, help_text) if help_text else table
     return Panel(
         body,
-        title=Text(title, style="bold"),
-        border_style=border_style,
+        title=Text("Autoscrapper", style="bold cyan"),
+        border_style="cyan",
         box=box.ROUNDED,
         padding=(1, 2),
     )
-
-
-def _prompt_menu_choice(prompt: str, *, default: str) -> str:
-    raw = Prompt.ask(prompt, default=default)
-    return raw.strip().lower()
-
-
-def _interactive_menu_supported(console: Console) -> bool:
-    return console.is_terminal and sys.stdin.isatty() and sys.stdout.isatty()
-
-
-def _menu_help_text(actions: dict[str, str]) -> Text:
-    base = "↑/↓ move • Enter select • number/letter jump"
-    extras = []
-    if "b" in actions:
-        extras.append("b back")
-    if "q" in actions:
-        extras.append("q quit")
-    if extras:
-        base = f"{base} • {' • '.join(extras)}"
-    return Text(base, style="dim")
-
-
-def _choose_menu_action(
-    console: Console,
-    title: str,
-    actions: dict[str, str],
-    *,
-    default_key: str,
-    prompt: str,
-    border_style: str = "cyan",
-) -> str:
-    if not actions:
-        return default_key
-
-    if not _interactive_menu_supported(console):
-        console.print(
-            _render_menu_panel(
-                title,
-                actions,
-                default_key=default_key,
-                border_style=border_style,
-            )
-        )
-        return _prompt_menu_choice(prompt, default=default_key)
-
-    keys = list(actions.keys())
-    selected_index = keys.index(default_key) if default_key in keys else 0
-    help_text = _menu_help_text(actions)
-
-    with key_reader() as read_key:
-        with Live(
-            _render_menu_panel(
-                title,
-                actions,
-                default_key=default_key,
-                selected_key=keys[selected_index],
-                border_style=border_style,
-                help_text=help_text,
-            ),
-            console=console,
-            refresh_per_second=20,
-            transient=True,
-        ) as live:
-            while True:
-                key = read_key()
-                if key.name == "UP":
-                    selected_index = (selected_index - 1) % len(keys)
-                elif key.name == "DOWN":
-                    selected_index = (selected_index + 1) % len(keys)
-                elif key.name == "HOME":
-                    selected_index = 0
-                elif key.name == "END":
-                    selected_index = len(keys) - 1
-                elif key.name == "ENTER":
-                    return keys[selected_index]
-                elif key.name == "ESC":
-                    if "b" in actions:
-                        return "b"
-                    if "q" in actions:
-                        return "q"
-                    return keys[selected_index]
-                elif key.name == "CHAR" and key.char:
-                    char = key.char.lower()
-                    if char in actions:
-                        return char
-                live.update(
-                    _render_menu_panel(
-                        title,
-                        actions,
-                        default_key=default_key,
-                        selected_key=keys[selected_index],
-                        border_style=border_style,
-                        help_text=help_text,
-                    ),
-                    refresh=True,
-                )
 
 
 def _scan_menu(console: Console) -> None:
@@ -252,7 +118,7 @@ def _scan_menu(console: Console) -> None:
 
     while True:
         console.print()
-        choice = _choose_menu_action(
+        choice = choose_menu_action(
             console,
             "Scan",
             {k: v[0] for k, v in actions.items()},
@@ -290,7 +156,7 @@ def _progress_menu(console: Console) -> None:
 
     while True:
         console.print()
-        choice = _choose_menu_action(
+        choice = choose_menu_action(
             console,
             "Progress",
             {k: v[0] for k, v in actions.items()},
@@ -318,7 +184,7 @@ def _rules_menu(console: Console) -> None:
 
     while True:
         console.print()
-        choice = _choose_menu_action(
+        choice = choose_menu_action(
             console,
             "Rules",
             {k: v[0] for k, v in actions.items()},
@@ -346,7 +212,7 @@ def _settings_menu(console: Console) -> None:
 
     while True:
         console.print()
-        choice = _choose_menu_action(
+        choice = choose_menu_action(
             console,
             "Settings",
             {k: v[0] for k, v in actions.items()},
@@ -376,7 +242,7 @@ def _maintenance_menu(console: Console) -> None:
 
     while True:
         console.print()
-        choice = _choose_menu_action(
+        choice = choose_menu_action(
             console,
             "Maintenance",
             {k: v[0] for k, v in actions.items()},
@@ -416,15 +282,16 @@ def show_home_menu(console: Optional[Console] = None) -> int:
         progress_settings = load_progress_settings()
 
         console.print()
-        _render_status_panel(console, progress_settings)
+        status_panel = _build_status_panel(progress_settings)
 
         recommended = "2" if not has_saved_progress(progress_settings) else "1"
-        choice = _choose_menu_action(
+        choice = choose_menu_action(
             console,
             "Main menu",
             {k: v[0] for k, v in actions.items()},
             default_key=recommended,
             prompt="What would you like to do?",
+            header=status_panel,
         )
         if choice in {"q", "quit"}:
             return 0
