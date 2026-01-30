@@ -12,11 +12,19 @@ from .cli.home import show_home_menu
 def main(argv=None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     if not args:
-        return show_home_menu()
+        from .tui import run_tui
+
+        return run_tui()
 
     cmd, *rest = args
     cmd = cmd.lower().strip()
 
+    if cmd in {"--cli", "cli"}:
+        return show_home_menu()
+    if cmd in {"--tui", "tui", "ui"}:
+        from .tui import run_tui
+
+        return run_tui()
     if cmd == "scan":
         return scan_cli.main(rest)
     if cmd == "rules":
@@ -27,7 +35,9 @@ def main(argv=None) -> int:
         return config_cli.main(rest)
 
     print(f"Unknown command: {cmd}\n")
-    return show_home_menu()
+    from .tui import run_tui
+
+    return run_tui()
 
 
 if __name__ == "__main__":
