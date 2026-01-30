@@ -169,7 +169,9 @@ class RulesScreen(Screen):
             return
         name_input.value = str(item.get("name", ""))
         id_input.value = str(item.get("id", ""))
-        self.current_action = normalize_action(str(item.get("action", "keep"))) or "keep"
+        self.current_action = (
+            normalize_action(str(item.get("action", "keep"))) or "keep"
+        )
         self.query_one("#rule-action", Static).update(f"Action: {self.current_action}")
         self.mode = "edit"
 
@@ -238,9 +240,7 @@ class RulesScreen(Screen):
             self._refresh_list()
             self._refresh_details()
 
-    def on_option_list_option_selected(
-        self, event: OptionList.OptionSelected
-    ) -> None:
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         if event.option_id is None:
             return
         try:

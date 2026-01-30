@@ -60,7 +60,9 @@ class ScanConfigScreen(Screen):
             with Horizontal(classes="field-row"):
                 yield Static("Manual pages", classes="field-label")
                 yield Checkbox(id="pages-manual")
-                yield Input(id="pages-count", placeholder="Pages", classes="field-input")
+                yield Input(
+                    id="pages-count", placeholder="Pages", classes="field-input"
+                )
 
             yield Static("Scrolling", classes="section-title")
             with Horizontal(classes="field-row"):
@@ -157,9 +159,7 @@ class ScanConfigScreen(Screen):
         retries_raw = self.query_one("#ocr-retries", Input).value.strip()
         delay_raw = self.query_one("#ocr-delay", Input).value.strip()
         if not retries_raw.isdigit() or int(retries_raw) < 0:
-            self.app.push_screen(
-                MessageScreen("Enter a valid OCR retry count (>= 0).")
-            )
+            self.app.push_screen(MessageScreen("Enter a valid OCR retry count (>= 0)."))
             return
         if not delay_raw.isdigit() or int(delay_raw) < 0:
             self.app.push_screen(

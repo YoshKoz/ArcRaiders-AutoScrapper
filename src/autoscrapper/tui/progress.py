@@ -199,9 +199,7 @@ class ProgressIntroScreen(ProgressScreen):
         elif event.button.id == "back":
             self.app.pop_screen()
 
-    def on_option_list_option_selected(
-        self, event: OptionList.OptionSelected
-    ) -> None:
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         if event.option_id in {"yes", "no"}:
             self._next()
 
@@ -253,12 +251,16 @@ class ActiveQuestsScreen(ProgressScreen):
     def _option_label(self, entry: QuestEntry) -> Text:
         selected = entry.id in self.state.active_ids
         marker = ("[x] ", "bold green") if selected else ("[ ] ", "dim")
-        text = Text.assemble(marker, (entry.name, "bold"), ("  ", ""), (entry.trader, "dim"))
+        text = Text.assemble(
+            marker, (entry.name, "bold"), ("  ", ""), (entry.trader, "dim")
+        )
         return text
 
     def _refresh_options(self) -> None:
         self.filtered = self._filtered_entries()
-        options = [Option(self._option_label(entry), id=entry.id) for entry in self.filtered]
+        options = [
+            Option(self._option_label(entry), id=entry.id) for entry in self.filtered
+        ]
         menu = self.query_one("#quest-list", OptionList)
         menu.set_options(options)
         if options:
@@ -287,9 +289,7 @@ class ActiveQuestsScreen(ProgressScreen):
             self._toggle_selected()
             event.stop()
 
-    def on_option_list_option_selected(
-        self, _event: OptionList.OptionSelected
-    ) -> None:
+    def on_option_list_option_selected(self, _event: OptionList.OptionSelected) -> None:
         self._toggle_selected()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -357,7 +357,9 @@ class WorkshopLevelsScreen(ProgressScreen):
 
     def _refresh_options(self) -> None:
         menu = self.query_one("#workshop-list", OptionList)
-        options = [Option(self._option_label(entry), id=entry.id) for entry in self.entries]
+        options = [
+            Option(self._option_label(entry), id=entry.id) for entry in self.entries
+        ]
         menu.set_options(options)
         if menu.highlighted is None and options:
             menu.highlighted = 0
@@ -514,7 +516,9 @@ class ReviewQuestsScreen(ProgressScreen):
     }
     """
 
-    def __init__(self, quest_entries: List[QuestEntry], settings: ProgressSettings) -> None:
+    def __init__(
+        self, quest_entries: List[QuestEntry], settings: ProgressSettings
+    ) -> None:
         super().__init__()
         self.quest_entries = quest_entries
         self.completed = set(settings.completed_quests)
@@ -564,9 +568,7 @@ class ReviewQuestsScreen(ProgressScreen):
         menu.set_options(options)
         if options:
             menu.highlighted = 0
-        count_text = (
-            f"Completed: {len(self.completed)} • Active: {len(self.active)} • Total: {len(self.quest_entries)}"
-        )
+        count_text = f"Completed: {len(self.completed)} • Active: {len(self.active)} • Total: {len(self.quest_entries)}"
         self.query_one("#review-count", Static).update(count_text)
 
     def _toggle_completed(self) -> None:

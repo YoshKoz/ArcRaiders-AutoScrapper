@@ -7,12 +7,10 @@ from rich.text import Text
 from textual import events
 from textual.app import App, ComposeResult
 from textual.containers import Vertical
-from textual.errors import SuspendNotSupported
 from textual.screen import Screen
 from textual.widgets import Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
-from ..cli import scan as scan_cli
 from .maintenance import ResetProgressScreen, ResetRulesScreen, UpdateSnapshotScreen
 from .progress import (
     launch_edit_workshops,
@@ -21,6 +19,7 @@ from .progress import (
     launch_review_quests,
 )
 from .rules import RulesScreen
+from .scan import ScanScreen
 from .settings import ScanConfigScreen
 from .status import build_status_panel, has_progress
 
@@ -133,13 +132,6 @@ class MenuScreen(Screen):
         menu.highlighted = index
         menu.action_select()
 
-    def run_with_suspend(self, func: Callable[[], object]) -> None:
-        try:
-            with self.app.suspend():
-                func()
-        except SuspendNotSupported:
-            func()
-
 
 class HomeScreen(MenuScreen):
     def __init__(self) -> None:
@@ -202,11 +194,15 @@ class AutoScrapperApp(App[None]):
 
     def _scan_menu(self) -> MenuScreen:
         items = [
-            MenuItem("1", "Scan now", lambda screen: _run_scan(screen, dry_run=False)),
+            MenuItem(
+                "1",
+                "Scan now",
+                lambda screen: screen.app.push_screen(ScanScreen(dry_run=False)),
+            ),
             MenuItem(
                 "2",
                 "Dry run (no clicks)",
-                lambda screen: _run_scan(screen, dry_run=True),
+                lambda screen: screen.app.push_screen(ScanScreen(dry_run=True)),
             ),
             MenuItem("b", "Back", lambda screen: screen.app.pop_screen()),
         ]
@@ -278,14 +274,6 @@ class AutoScrapperApp(App[None]):
             MenuItem("b", "Back", lambda screen: screen.app.pop_screen()),
         ]
         return MenuScreen("Maintenance", items, default_key="1")
-
-
-def _run_scan(screen: MenuScreen, *, dry_run: bool) -> None:
-    def _work() -> None:
-        args = ["--dry-run"] if dry_run else []
-        scan_cli.main(args)
-
-    screen.run_with_suspend(_work)
 
 
 def run_tui() -> int:

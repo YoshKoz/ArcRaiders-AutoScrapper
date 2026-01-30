@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
 
 from .actions import MENU_APPEAR_DELAY, _perform_recycle, _perform_sell
-from .live_ui import _ScanLiveUI
 from .outcomes import _describe_action
+from .progress import RichScanProgress, ScanProgress
 from .rich_support import Console
 from .types import ScanStats
 from ..core.item_actions import (
@@ -81,6 +81,7 @@ def scan_inventory(
     actions_path: Path = ITEM_RULES_PATH,
     actions_override: Optional[ActionMap] = None,
     profile_timing: bool = False,
+    progress: Optional[ScanProgress] = None,
 ) -> Tuple[List[ItemActionResult], ScanStats]:
     """
     Walk each 4x5 grid (top-to-bottom, left-to-right), OCR each cell's item
@@ -106,171 +107,165 @@ def scan_inventory(
 
     _ocr_info = initialize_ocr()
 
-    if show_progress and Console is not None:
-        console = Console()
-        with console.status("Waiting for Arc Raiders window…", spinner="dots"):
-            window = wait_for_target_window(timeout=window_timeout)
-    else:
-        print("waiting for Arc Raiders to be active window...", flush=True)
-        window = wait_for_target_window(timeout=window_timeout)
-    _display_name, _display_size, work_area = window_display_info(window)
-    mon_left, mon_top, mon_right, mon_bottom = window_monitor_rect(window)
-    win_left, win_top, win_width, win_height = window_rect(window)
-    win_right = win_left + win_width
-    win_bottom = win_top + win_height
-    work_left, work_top, work_right, work_bottom = work_area
-    win_is_full_monitor = (
-        win_left == mon_left
-        and win_top == mon_top
-        and win_right == mon_right
-        and win_bottom == mon_bottom
-    )
-
-    startup_events: List[Tuple[str, str]] = []
-
-    if (
-        win_left < mon_left
-        or win_top < mon_top
-        or win_right > mon_right
-        or win_bottom > mon_bottom
-    ):
-        startup_events.append(
-            (
-                "Target window extends beyond its display bounds; ensure it is fully visible.",
-                "yellow",
-            )
-        )
-    elif not win_is_full_monitor and (
-        win_left < work_left
-        or win_top < work_top
-        or win_right > work_right
-        or win_bottom > work_bottom
-    ):
-        startup_events.append(
-            (
-                "Target window overlaps the OS taskbar/dock area; ensure no UI is obscured.",
-                "yellow",
-            )
-        )
-
-    actions: ActionMap = (
-        actions_override
-        if actions_override is not None
-        else load_item_actions(actions_path)
-    )
-
-    grid_roi = inventory_roi_rect(win_width, win_height)
-    safe_point = safe_mouse_point(win_width, win_height)
-    safe_point_abs = (win_left + safe_point[0], win_top + safe_point[1])
-    grid_center = grid_center_point(win_width, win_height)
-    grid_center_abs = (win_left + grid_center[0], win_top + grid_center[1])
-    cells_per_page = Grid.COLS * Grid.ROWS
-
-    def _detect_inventory_count() -> Tuple[Optional[int], str]:
-        """
-        Capture the stash count label while the cursor is in a safe spot.
-        """
+    progress_impl: Optional[ScanProgress] = progress
+    if progress_impl is None and show_progress and Console is not None:
         try:
+            progress_impl = RichScanProgress()
+        except Exception:
+            progress_impl = None
+
+    if progress_impl is not None:
+        progress_impl.start()
+        progress_impl.set_phase("Waiting for Arc Raiders window…")
+
+    try:
+        if progress_impl is not None:
+            window = wait_for_target_window(timeout=window_timeout)
+        else:
+            print("waiting for Arc Raiders to be active window...", flush=True)
+            window = wait_for_target_window(timeout=window_timeout)
+        _display_name, _display_size, work_area = window_display_info(window)
+        mon_left, mon_top, mon_right, mon_bottom = window_monitor_rect(window)
+        win_left, win_top, win_width, win_height = window_rect(window)
+        win_right = win_left + win_width
+        win_bottom = win_top + win_height
+        work_left, work_top, work_right, work_bottom = work_area
+        win_is_full_monitor = (
+            win_left == mon_left
+            and win_top == mon_top
+            and win_right == mon_right
+            and win_bottom == mon_bottom
+        )
+
+        startup_events: List[Tuple[str, str]] = []
+
+        if (
+            win_left < mon_left
+            or win_top < mon_top
+            or win_right > mon_right
+            or win_bottom > mon_bottom
+        ):
+            startup_events.append(
+                (
+                    "Target window extends beyond its display bounds; ensure it is fully visible.",
+                    "yellow",
+                )
+            )
+        elif not win_is_full_monitor and (
+            win_left < work_left
+            or win_top < work_top
+            or win_right > work_right
+            or win_bottom > work_bottom
+        ):
+            startup_events.append(
+                (
+                    "Target window overlaps the OS taskbar/dock area; ensure no UI is obscured.",
+                    "yellow",
+                )
+            )
+
+        actions: ActionMap = (
+            actions_override
+            if actions_override is not None
+            else load_item_actions(actions_path)
+        )
+
+        grid_roi = inventory_roi_rect(win_width, win_height)
+        safe_point = safe_mouse_point(win_width, win_height)
+        safe_point_abs = (win_left + safe_point[0], win_top + safe_point[1])
+        grid_center = grid_center_point(win_width, win_height)
+        grid_center_abs = (win_left + grid_center[0], win_top + grid_center[1])
+        cells_per_page = Grid.COLS * Grid.ROWS
+
+        def _detect_inventory_count() -> Tuple[Optional[int], str]:
+            """
+            Capture the stash count label while the cursor is in a safe spot.
+            """
+            try:
+                move_absolute(
+                    safe_point_abs[0],
+                    safe_point_abs[1],
+                )
+                pause_action()
+                count_roi_rel = inventory_count_rect(win_width, win_height)
+                count_left = win_left + count_roi_rel[0]
+                count_top = win_top + count_roi_rel[1]
+                count_bgr = capture_region(
+                    (count_left, count_top, count_roi_rel[2], count_roi_rel[3])
+                )
+                return ocr_inventory_count(count_bgr)
+            except Exception as exc:
+                startup_events.append((f"Failed to read stash count: {exc}", "yellow"))
+                return None, ""
+
+        stash_items, stash_count_text = _detect_inventory_count()
+        auto_pages = (
+            math.ceil(stash_items / cells_per_page) if stash_items is not None else None
+        )
+        pages_to_scan = pages if pages is not None else auto_pages or 1
+        pages_to_scan = max(1, pages_to_scan)
+        pages_source = "cli" if pages is not None else "auto"
+        items_label = stash_items if stash_items is not None else "?"
+
+        def _queue_event(message: str, style: str = "dim") -> None:
+            if progress_impl is not None:
+                progress_impl.add_event(message, style=style)
+            else:
+                startup_events.append((message, style))
+
+        def _detect_grid() -> Grid:
+            """
+            Move the cursor out of the grid, capture the ROI, and detect cells.
+            """
             move_absolute(
                 safe_point_abs[0],
                 safe_point_abs[1],
             )
             pause_action()
-            count_roi_rel = inventory_count_rect(win_width, win_height)
-            count_left = win_left + count_roi_rel[0]
-            count_top = win_top + count_roi_rel[1]
-            count_bgr = capture_region(
-                (count_left, count_top, count_roi_rel[2], count_roi_rel[3])
-            )
-            return ocr_inventory_count(count_bgr)
-        except Exception as exc:
-            startup_events.append((f"Failed to read stash count: {exc}", "yellow"))
-            return None, ""
+            roi_left = win_left + grid_roi[0]
+            roi_top = win_top + grid_roi[1]
+            inv_bgr = capture_region((roi_left, roi_top, grid_roi[2], grid_roi[3]))
+            grid = Grid.detect(inv_bgr, grid_roi, win_width, win_height)
+            expected_cells = Grid.COLS * Grid.ROWS
+            if len(grid) < expected_cells:
+                _queue_event(
+                    f"Detected {len(grid)} cells inside the grid ROI (expected {expected_cells}); "
+                    "grid may be partially obscured or ROI misaligned.",
+                    style="yellow",
+                )
+            return grid
 
-    stash_items, stash_count_text = _detect_inventory_count()
-    auto_pages = (
-        math.ceil(stash_items / cells_per_page) if stash_items is not None else None
-    )
-    pages_to_scan = pages if pages is not None else auto_pages or 1
-    pages_to_scan = max(1, pages_to_scan)
-    pages_source = "cli" if pages is not None else "auto"
-    items_label = stash_items if stash_items is not None else "?"
+        grid = _detect_grid()
+        cells = list(grid)
+        total_cells = cells_per_page * pages_to_scan
+        items_total = stash_items if stash_items is not None else total_cells
+        results: List[ItemActionResult] = []
+        pages_scanned = 0
 
-    ui: Optional[_ScanLiveUI] = None
-    ui_running = False
+        abort_if_escape_pressed()
 
-    def _queue_event(message: str, style: str = "dim") -> None:
-        if ui is not None and ui_running:
-            ui.add_event(message, style=style)
+        if progress_impl is not None:
+            progress_impl.set_mode("Dry run" if not apply_actions else "Scan")
+            if stash_items is None and stash_count_text:
+                progress_impl.set_stash_label(f"? items (OCR '{stash_count_text}')")
+            else:
+                progress_impl.set_stash_label(f"{items_label} items")
+            progress_impl.set_pages_label(f"{pages_to_scan} ({pages_source})")
+            progress_impl.set_total(items_total)
+            progress_impl.set_phase("Scanning…")
+            progress_impl.start_timer()
+            for message, style in startup_events:
+                progress_impl.add_event(message, style=style)
+            startup_events.clear()
         else:
-            startup_events.append((message, style))
+            for message, _style in startup_events:
+                print(f"[warning] {message}", flush=True)
+            startup_events.clear()
 
-    def _detect_grid() -> Grid:
-        """
-        Move the cursor out of the grid, capture the ROI, and detect cells.
-        """
-        move_absolute(
-            safe_point_abs[0],
-            safe_point_abs[1],
-        )
-        pause_action()
-        roi_left = win_left + grid_roi[0]
-        roi_top = win_top + grid_roi[1]
-        inv_bgr = capture_region((roi_left, roi_top, grid_roi[2], grid_roi[3]))
-        grid = Grid.detect(inv_bgr, grid_roi, win_width, win_height)
-        expected_cells = Grid.COLS * Grid.ROWS
-        if len(grid) < expected_cells:
-            _queue_event(
-                f"Detected {len(grid)} cells inside the grid ROI (expected {expected_cells}); "
-                "grid may be partially obscured or ROI misaligned.",
-                style="yellow",
-            )
-        return grid
+        stop_at_global_idx: Optional[int] = None
+        scroll_sequence = _scroll_clicks_sequence(scroll_clicks_per_page)
+        stop_scan = False
 
-    grid = _detect_grid()
-    cells = list(grid)
-    total_cells = cells_per_page * pages_to_scan
-    items_total = stash_items if stash_items is not None else total_cells
-    results: List[ItemActionResult] = []
-    pages_scanned = 0
-
-    abort_if_escape_pressed()
-
-    if show_progress:
-        try:
-            ui = _ScanLiveUI()
-            ui.start()
-            ui_running = True
-        except Exception:
-            ui = None
-            ui_running = False
-
-    if ui is not None and ui_running:
-        ui.mode_label = "Dry run" if not apply_actions else "Scan"
-
-        if stash_items is None and stash_count_text:
-            ui.stash_label = f"? items (OCR '{stash_count_text}')"
-        else:
-            ui.stash_label = f"{items_label} items"
-
-        ui.pages_label = f"{pages_to_scan} ({pages_source})"
-        ui.set_total(items_total)
-        ui.set_phase("Scanning…")
-        ui.start_timer()
-
-        for message, style in startup_events:
-            ui.add_event(message, style=style)
-        startup_events.clear()
-    else:
-        for message, _style in startup_events:
-            print(f"[warning] {message}", flush=True)
-        startup_events.clear()
-
-    stop_at_global_idx: Optional[int] = None
-    scroll_sequence = _scroll_clicks_sequence(scroll_clicks_per_page)
-    stop_scan = False
-
-    try:
         for page in range(pages_to_scan):
             page_base_idx = page * cells_per_page
             if stop_at_global_idx is not None and page_base_idx >= stop_at_global_idx:
@@ -322,8 +317,8 @@ def scan_inventory(
                         f"Reached empty slot idx={stop_at_global_idx:03d}; stopping scan.",
                         style="yellow",
                     )
-                    if ui is not None and ui_running:
-                        ui.set_phase("Stopping…")
+                    if progress_impl is not None:
+                        progress_impl.set_phase("Stopping…")
                     stop_scan = True
                     break
 
@@ -474,14 +469,14 @@ def scan_inventory(
                     )
                 )
 
-                if ui is not None and ui_running:
+                if progress_impl is not None:
                     processed = len(results)
                     total_label = str(items_total) if items_total is not None else "?"
                     current_label = (
                         f"{processed}/{total_label} • p{page + 1}/{pages_to_scan} "
                         f"r{cell.row}c{cell.col}"
                     )
-                    ui.update_item(current_label, item_label, action_label)
+                    progress_impl.update_item(current_label, item_label, action_label)
 
                 destructive_action = action_taken in {"SELL", "RECYCLE"}
                 if destructive_action:
@@ -510,29 +505,27 @@ def scan_inventory(
                             f"Reached empty slot idx={stop_at_global_idx:03d}; stopping scan.",
                             style="yellow",
                         )
-                        if ui is not None and ui_running:
-                            ui.set_phase("Stopping…")
+                        if progress_impl is not None:
+                            progress_impl.set_phase("Stopping…")
                         stop_scan = True
                         break
                     open_cell_menu(cells[idx_in_page], win_left, win_top)
 
-            if stop_scan:
-                break
+                if stop_scan:
+                    break
+        processing_seconds = time.perf_counter() - scan_start
+        stats = ScanStats(
+            items_in_stash=stash_items,
+            stash_count_text=stash_count_text,
+            pages_planned=pages_to_scan,
+            pages_scanned=pages_scanned,
+            processing_seconds=processing_seconds,
+        )
+
+        return results, stats
     finally:
-        if ui is not None and ui_running:
-            ui.stop()
-            ui_running = False
-
-    processing_seconds = time.perf_counter() - scan_start
-    stats = ScanStats(
-        items_in_stash=stash_items,
-        stash_count_text=stash_count_text,
-        pages_planned=pages_to_scan,
-        pages_scanned=pages_scanned,
-        processing_seconds=processing_seconds,
-    )
-
-    return results, stats
+        if progress_impl is not None:
+            progress_impl.stop()
 
 
 # ---------------------------------------------------------------------------
