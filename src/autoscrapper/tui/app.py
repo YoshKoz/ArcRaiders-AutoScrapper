@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable, Iterable, Optional
 
-from rich.console import Console as RichConsole
 from rich.text import Text
 from textual import events
 from textual.app import App, ComposeResult
@@ -13,19 +12,17 @@ from textual.screen import Screen
 from textual.widgets import Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
-from ..cli import config as config_cli
 from ..cli import scan as scan_cli
-from ..cli.home import _reset_progress, _reset_rules
-from ..cli.progress_flow import (
-    edit_saved_workshops,
-    generate_rules_from_saved_progress,
-    review_saved_quests,
-    run_progress_wizard,
-    run_update_data,
+from .maintenance import ResetProgressScreen, ResetRulesScreen, UpdateSnapshotScreen
+from .progress import (
+    launch_edit_workshops,
+    launch_generate_rules,
+    launch_progress_wizard,
+    launch_review_quests,
 )
-from ..items.rules_viewer import run_rules_viewer
+from .rules import RulesScreen
+from .settings import ScanConfigScreen
 from .status import build_status_panel, has_progress
-
 
 MenuAction = Callable[["MenuScreen"], None]
 
@@ -120,9 +117,7 @@ class MenuScreen(Screen):
                 self._select_key(key)
                 event.stop()
 
-    def on_option_list_option_selected(
-        self, event: OptionList.OptionSelected
-    ) -> None:
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         option_id = event.option_id
         if option_id and option_id in self._actions:
             self._actions[option_id].action(self)
@@ -161,14 +156,26 @@ class HomeScreen(MenuScreen):
         self.default_key = recommended
         self.recommended_key = recommended
         self.items = [
-            MenuItem("1", "Scan", lambda screen: screen.app.push_screen(screen.app._scan_menu())),
+            MenuItem(
+                "1",
+                "Scan",
+                lambda screen: screen.app.push_screen(screen.app._scan_menu()),
+            ),
             MenuItem(
                 "2",
                 "Generate Personalized Rule List (Quests / Workshop Level)",
                 lambda screen: screen.app.push_screen(screen.app._progress_menu()),
             ),
-            MenuItem("3", "Rules", lambda screen: screen.app.push_screen(screen.app._rules_menu())),
-            MenuItem("4", "Settings", lambda screen: screen.app.push_screen(screen.app._settings_menu())),
+            MenuItem(
+                "3",
+                "Rules",
+                lambda screen: screen.app.push_screen(screen.app._rules_menu()),
+            ),
+            MenuItem(
+                "4",
+                "Settings",
+                lambda screen: screen.app.push_screen(screen.app._settings_menu()),
+            ),
             MenuItem(
                 "5",
                 "Maintenance",
@@ -196,47 +203,81 @@ class AutoScrapperApp(App[None]):
     def _scan_menu(self) -> MenuScreen:
         items = [
             MenuItem("1", "Scan now", lambda screen: _run_scan(screen, dry_run=False)),
-            MenuItem("2", "Dry run (no clicks)", lambda screen: _run_scan(screen, dry_run=True)),
+            MenuItem(
+                "2",
+                "Dry run (no clicks)",
+                lambda screen: _run_scan(screen, dry_run=True),
+            ),
             MenuItem("b", "Back", lambda screen: screen.app.pop_screen()),
         ]
         return MenuScreen("Scan", items, default_key="1")
 
     def _progress_menu(self) -> MenuScreen:
         items = [
-            MenuItem("1", "Set up / update progress", _run_progress_wizard),
-            MenuItem("2", "Review quests", _run_review_quests),
-            MenuItem("3", "Edit workshop levels", _run_edit_workshops),
-            MenuItem("4", "Update rules from saved progress", _run_update_rules),
+            MenuItem(
+                "1",
+                "Set up / update progress",
+                lambda screen: launch_progress_wizard(screen.app),
+            ),
+            MenuItem(
+                "2", "Review quests", lambda screen: launch_review_quests(screen.app)
+            ),
+            MenuItem(
+                "3",
+                "Edit workshop levels",
+                lambda screen: launch_edit_workshops(screen.app),
+            ),
+            MenuItem(
+                "4",
+                "Update rules from saved progress",
+                lambda screen: launch_generate_rules(screen.app),
+            ),
             MenuItem("b", "Back", lambda screen: screen.app.pop_screen()),
         ]
         return MenuScreen("Progress", items, default_key="1")
 
     def _rules_menu(self) -> MenuScreen:
         items = [
-            MenuItem("1", "Review / edit rules", _run_rules_viewer),
+            MenuItem(
+                "1",
+                "Review / edit rules",
+                lambda screen: screen.app.push_screen(RulesScreen()),
+            ),
             MenuItem("b", "Back", lambda screen: screen.app.pop_screen()),
         ]
         return MenuScreen("Rules", items, default_key="1")
 
     def _settings_menu(self) -> MenuScreen:
         items = [
-            MenuItem("1", "Scan configuration", _run_scan_config),
+            MenuItem(
+                "1",
+                "Scan configuration",
+                lambda screen: screen.app.push_screen(ScanConfigScreen()),
+            ),
             MenuItem("b", "Back", lambda screen: screen.app.pop_screen()),
         ]
         return MenuScreen("Settings", items, default_key="1")
 
     def _maintenance_menu(self) -> MenuScreen:
         items = [
-            MenuItem("1", "Update game data snapshot", _run_update_snapshot),
-            MenuItem("2", "Reset saved progress", _run_reset_progress),
-            MenuItem("3", "Reset rules to default", _run_reset_rules),
+            MenuItem(
+                "1",
+                "Update game data snapshot",
+                lambda screen: screen.app.push_screen(UpdateSnapshotScreen()),
+            ),
+            MenuItem(
+                "2",
+                "Reset saved progress",
+                lambda screen: screen.app.push_screen(ResetProgressScreen()),
+            ),
+            MenuItem(
+                "3",
+                "Reset rules to default",
+                lambda screen: screen.app.push_screen(ResetRulesScreen()),
+            ),
             MenuItem("b", "Back", lambda screen: screen.app.pop_screen()),
         ]
         return MenuScreen("Maintenance", items, default_key="1")
-
-
-def _console() -> RichConsole:
-    return RichConsole()
 
 
 def _run_scan(screen: MenuScreen, *, dry_run: bool) -> None:
@@ -245,42 +286,6 @@ def _run_scan(screen: MenuScreen, *, dry_run: bool) -> None:
         scan_cli.main(args)
 
     screen.run_with_suspend(_work)
-
-
-def _run_progress_wizard(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: run_progress_wizard(_console()))
-
-
-def _run_review_quests(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: review_saved_quests(_console()))
-
-
-def _run_edit_workshops(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: edit_saved_workshops(_console()))
-
-
-def _run_update_rules(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: generate_rules_from_saved_progress(_console()))
-
-
-def _run_rules_viewer(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: run_rules_viewer(_console()))
-
-
-def _run_scan_config(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: config_cli.main([]))
-
-
-def _run_update_snapshot(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: run_update_data(_console()))
-
-
-def _run_reset_progress(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: _reset_progress(_console()))
-
-
-def _run_reset_rules(screen: MenuScreen) -> None:
-    screen.run_with_suspend(lambda: _reset_rules(_console()))
 
 
 def run_tui() -> int:

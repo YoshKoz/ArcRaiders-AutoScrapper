@@ -83,11 +83,7 @@ def build_status_panel() -> Panel:
             style="dim",
         )
 
-    body = (
-        (status_table, tip)
-        if tip
-        else (status_table,)
-    )
+    body = (status_table, tip) if tip else (status_table,)
     return Panel(
         Group(*body),
         title=Text("Autoscrapper", style="bold cyan"),
