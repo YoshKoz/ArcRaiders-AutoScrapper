@@ -94,7 +94,7 @@ def _render_status_panel(console: Console, progress_settings: ProgressSettings) 
     tip: Optional[Text] = None
     if not has_saved_progress(progress_settings):
         tip = Text(
-            "First run: set up your progress to generate rules for your quests/workshops.",
+            "First run: generate a personalized rule list from your quests and workshop level.",
             style="dim",
         )
 
@@ -307,7 +307,10 @@ def show_home_menu(console: Optional[Console] = None) -> int:
 
     actions: dict[str, tuple[str, Optional[MenuHandler]]] = {
         "1": ("Scan", lambda: _scan_menu(console)),
-        "2": ("Progress (quests + workshops)", lambda: _progress_menu(console)),
+        "2": (
+            "Generate Personalized Rule List (Quests / Workshop Level)",
+            lambda: _progress_menu(console),
+        ),
         "3": ("Rules", lambda: _rules_menu(console)),
         "4": ("Settings", lambda: _settings_menu(console)),
         "5": ("Maintenance", lambda: _maintenance_menu(console)),
