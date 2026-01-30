@@ -3,9 +3,9 @@ from __future__ import annotations
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Button, Checkbox, Footer, Input, Static
 
+from .common import AppScreen, MessageScreen
 from ..config import (
     ScanSettings,
     config_path,
@@ -14,10 +14,9 @@ from ..config import (
     save_scan_settings,
 )
 from ..interaction.ui_windows import SCROLL_CLICKS_PER_PAGE
-from .common import MessageScreen
 
 
-class ScanConfigScreen(Screen):
+class ScanConfigScreen(AppScreen):
     DEFAULT_CSS = """
     ScanConfigScreen {
         padding: 1 2;

@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Set
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, OptionList, Static
 from textual.widgets.option_list import Option
 
@@ -26,7 +25,7 @@ from ..progress.progress_config import (
     resolve_active_quests,
 )
 from ..progress.rules_generator import generate_rules_from_active, write_rules
-from .common import MessageScreen
+from .common import AppScreen, MessageScreen
 
 
 @dataclass(frozen=True)
@@ -139,7 +138,7 @@ def _build_state() -> ProgressWizardState:
     )
 
 
-class ProgressScreen(Screen):
+class ProgressScreen(AppScreen):
     pass
 
 
@@ -210,11 +209,24 @@ class ActiveQuestsScreen(ProgressScreen):
         padding: 1 2;
     }
 
+    #quest-list {
+        height: 1fr;
+    }
+
     #quest-actions {
         margin-top: 1;
         height: auto;
     }
     """
+
+    BINDINGS = [
+        *ProgressScreen.BINDINGS,
+        ("space", "toggle", "Toggle quest"),
+        ("enter", "toggle", "Toggle quest"),
+        ("/", "focus_search", "Search"),
+        ("ctrl+n", "next", "Next"),
+        ("ctrl+p", "back", "Back"),
+    ]
 
     def __init__(self, state: ProgressWizardState) -> None:
         super().__init__()
@@ -234,6 +246,13 @@ class ActiveQuestsScreen(ProgressScreen):
 
     def on_mount(self) -> None:
         self._refresh_options()
+        self._focus_list()
+
+    def _focus_list(self) -> None:
+        self.query_one("#quest-list", OptionList).focus()
+
+    def _focus_search(self) -> None:
+        self.query_one("#quest-search", Input).focus()
 
     def _filtered_entries(self) -> List[QuestEntry]:
         if not self.filter_text:
@@ -257,14 +276,31 @@ class ActiveQuestsScreen(ProgressScreen):
         return text
 
     def _refresh_options(self) -> None:
+        menu = self.query_one("#quest-list", OptionList)
+        prev_filtered = list(self.filtered)
+        prev_highlight = menu.highlighted
+        prev_id = None
+        if prev_highlight is not None and 0 <= prev_highlight < len(prev_filtered):
+            prev_id = prev_filtered[prev_highlight].id
+
         self.filtered = self._filtered_entries()
         options = [
             Option(self._option_label(entry), id=entry.id) for entry in self.filtered
         ]
-        menu = self.query_one("#quest-list", OptionList)
+        had_focus = menu.has_focus
         menu.set_options(options)
         if options:
-            menu.highlighted = 0
+            if prev_id:
+                for idx, entry in enumerate(self.filtered):
+                    if entry.id == prev_id:
+                        menu.highlighted = idx
+                        break
+                else:
+                    menu.highlighted = 0
+            else:
+                menu.highlighted = 0
+        if had_focus:
+            menu.focus()
         count_text = f"Selected: {len(self.state.active_ids)} • Total: {len(self.state.quest_entries)}"
         self.query_one("#quest-count", Static).update(count_text)
 
@@ -284,10 +320,9 @@ class ActiveQuestsScreen(ProgressScreen):
             self.filter_text = event.value
             self._refresh_options()
 
-    def on_key(self, event) -> None:
-        if event.key == "space":
-            self._toggle_selected()
-            event.stop()
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input.id == "quest-search":
+            self._focus_list()
 
     def on_option_list_option_selected(self, _event: OptionList.OptionSelected) -> None:
         self._toggle_selected()
@@ -296,10 +331,25 @@ class ActiveQuestsScreen(ProgressScreen):
         if event.button.id == "back":
             self.app.pop_screen()
         elif event.button.id == "next":
-            if not self.state.active_ids:
-                self.app.push_screen(MessageScreen("Select at least one active quest."))
-                return
-            self.app.push_screen(WorkshopLevelsScreen(self.state, wizard_mode=True))
+            self._next()
+
+    def _next(self) -> None:
+        if not self.state.active_ids:
+            self.app.push_screen(MessageScreen("Select at least one active quest."))
+            return
+        self.app.push_screen(WorkshopLevelsScreen(self.state, wizard_mode=True))
+
+    def action_toggle(self) -> None:
+        self._toggle_selected()
+
+    def action_next(self) -> None:
+        self._next()
+
+    def action_back(self) -> None:
+        self.app.pop_screen()
+
+    def action_focus_search(self) -> None:
+        self._focus_search()
 
 
 class WorkshopLevelsScreen(ProgressScreen):
@@ -308,11 +358,21 @@ class WorkshopLevelsScreen(ProgressScreen):
         padding: 1 2;
     }
 
+    #workshop-list {
+        height: 1fr;
+    }
+
     #workshop-actions {
         margin-top: 1;
         height: auto;
     }
     """
+
+    BINDINGS = [
+        *ProgressScreen.BINDINGS,
+        ("ctrl+n", "next", "Next"),
+        ("ctrl+p", "back", "Back"),
+    ]
 
     def __init__(self, state: ProgressWizardState, *, wizard_mode: bool) -> None:
         super().__init__()
@@ -357,12 +417,16 @@ class WorkshopLevelsScreen(ProgressScreen):
 
     def _refresh_options(self) -> None:
         menu = self.query_one("#workshop-list", OptionList)
+        prev_highlight = menu.highlighted
         options = [
             Option(self._option_label(entry), id=entry.id) for entry in self.entries
         ]
         menu.set_options(options)
-        if menu.highlighted is None and options:
-            menu.highlighted = 0
+        if options:
+            if prev_highlight is None:
+                menu.highlighted = 0
+            else:
+                menu.highlighted = min(prev_highlight, len(options) - 1)
         count_text = f"Workshops set: {len(self.levels)}"
         self.query_one("#workshop-count", Static).update(count_text)
 
@@ -408,13 +472,22 @@ class WorkshopLevelsScreen(ProgressScreen):
         if event.button.id == "back":
             self.app.pop_screen()
         elif event.button.id in {"next", "save"}:
-            self.state.hideout_levels = dict(self.levels)
-            if self.wizard_mode:
-                self.app.push_screen(ProgressSummaryScreen(self.state))
-            else:
-                _save_workshop_levels(self.state.hideout_levels)
-                self.app.pop_screen()
-                self.app.push_screen(MessageScreen("Workshop levels saved."))
+            self._commit_levels()
+
+    def _commit_levels(self) -> None:
+        self.state.hideout_levels = dict(self.levels)
+        if self.wizard_mode:
+            self.app.push_screen(ProgressSummaryScreen(self.state))
+        else:
+            _save_workshop_levels(self.state.hideout_levels)
+            self.app.pop_screen()
+            self.app.push_screen(MessageScreen("Workshop levels saved."))
+
+    def action_next(self) -> None:
+        self._commit_levels()
+
+    def action_back(self) -> None:
+        self.app.pop_screen()
 
 
 class ProgressSummaryScreen(ProgressScreen):

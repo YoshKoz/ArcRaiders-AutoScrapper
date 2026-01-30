@@ -4,8 +4,14 @@ from typing import Optional
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.screen import ModalScreen
+from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, Static
+
+
+class AppScreen(Screen):
+    BINDINGS = [
+        ("ctrl+g", "main_menu", "Main menu"),
+    ]
 
 
 class MessageScreen(ModalScreen[None]):

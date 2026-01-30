@@ -5,10 +5,10 @@ from typing import List, Optional
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Button, Footer, Input, OptionList, Static
 from textual.widgets.option_list import Option
 
+from .common import AppScreen, MessageScreen
 from ..items.rules_cli import (
     CUSTOM_RULES_PATH,
     active_rules_path,
@@ -17,7 +17,6 @@ from ..items.rules_cli import (
     save_custom_rules,
     using_custom_rules,
 )
-from .common import MessageScreen
 
 
 def _display_action(item: dict) -> str:
@@ -43,7 +42,7 @@ def _filter_indices(items: List[dict], query: str) -> List[int]:
     return matches
 
 
-class RulesScreen(Screen):
+class RulesScreen(AppScreen):
     DEFAULT_CSS = """
     RulesScreen {
         padding: 1 2;

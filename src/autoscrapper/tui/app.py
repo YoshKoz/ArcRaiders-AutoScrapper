@@ -7,10 +7,10 @@ from rich.text import Text
 from textual import events
 from textual.app import App, ComposeResult
 from textual.containers import Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, OptionList, Static
 from textual.widgets.option_list import Option
 
+from .common import AppScreen
 from .maintenance import ResetProgressScreen, ResetRulesScreen, UpdateSnapshotScreen
 from .progress import (
     launch_edit_workshops,
@@ -41,7 +41,7 @@ class StatusPanel(Static):
         self.refresh_status()
 
 
-class MenuScreen(Screen):
+class MenuScreen(AppScreen):
     def __init__(
         self,
         title: str,
@@ -192,6 +192,12 @@ class AutoScrapperApp(App[None]):
     def on_mount(self) -> None:
         self.push_screen(HomeScreen())
 
+    def action_main_menu(self) -> None:
+        if isinstance(self.screen, ScanScreen):
+            return
+        while not isinstance(self.screen, HomeScreen):
+            self.pop_screen()
+
     def _scan_menu(self) -> MenuScreen:
         items = [
             MenuItem(
@@ -278,5 +284,5 @@ class AutoScrapperApp(App[None]):
 
 def run_tui() -> int:
     app = AutoScrapperApp()
-    app.run()
+    app.run(mouse=False)
     return 0

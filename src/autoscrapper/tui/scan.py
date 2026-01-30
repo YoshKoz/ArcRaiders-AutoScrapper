@@ -18,7 +18,7 @@ from ..config import load_scan_settings
 from ..scanner.outcomes import _describe_action, _outcome_style
 from ..scanner.progress import ScanProgress
 from ..scanner.types import ScanStats
-from .common import MessageScreen
+from .common import AppScreen, MessageScreen
 
 if TYPE_CHECKING:
     from ..core.item_actions import ItemActionResult
@@ -63,9 +63,11 @@ def _format_duration(seconds: Optional[float]) -> str:
 
 
 def _item_label(result: "ItemActionResult") -> str:
-    return (result.item_name or result.raw_item_text or "<unreadable>").replace(
-        "\n", " "
-    ).strip()
+    return (
+        (result.item_name or result.raw_item_text or "<unreadable>")
+        .replace("\n", " ")
+        .strip()
+    )
 
 
 class TextualScanProgress(ScanProgress):
@@ -196,9 +198,7 @@ class ScanScreen(Screen):
             )
             return
         except TimeoutError as exc:
-            self._updates.put(
-                ScanUpdate(kind="error", payload={"message": str(exc)})
-            )
+            self._updates.put(ScanUpdate(kind="error", payload={"message": str(exc)}))
             return
         except RuntimeError as exc:
             self._updates.put(
@@ -207,7 +207,9 @@ class ScanScreen(Screen):
             return
         except Exception as exc:  # pragma: no cover - safety net
             self._updates.put(
-                ScanUpdate(kind="error", payload={"message": f"Unexpected error: {exc}"})
+                ScanUpdate(
+                    kind="error", payload={"message": f"Unexpected error: {exc}"}
+                )
             )
             return
 
@@ -427,8 +429,9 @@ class ScanScreen(Screen):
         return eta.strftime("%H:%M:%S")
 
 
-class ScanResultsScreen(Screen):
+class ScanResultsScreen(AppScreen):
     BINDINGS = [
+        *AppScreen.BINDINGS,
         ("b", "back", "Back"),
         ("escape", "back", "Back"),
     ]
