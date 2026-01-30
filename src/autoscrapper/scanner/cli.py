@@ -8,6 +8,7 @@ from .engine import scan_inventory
 from .report import _render_results
 from ..config import load_scan_settings
 from ..core.item_actions import ITEM_RULES_PATH
+from ..cli.warnings import maybe_warn_default_rules
 from ..interaction.inventory_grid import Grid
 from ..interaction.ui_windows import SCROLL_CLICKS_PER_PAGE
 from ..ocr.inventory_vision import enable_ocr_debug
@@ -95,6 +96,8 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
     parser.set_defaults(debug_ocr=settings.debug_ocr)
 
     args = parser.parse_args(list(argv) if argv is not None else None)
+
+    maybe_warn_default_rules()
 
     if args.debug_ocr:
         enable_ocr_debug(Path("ocr_debug"))

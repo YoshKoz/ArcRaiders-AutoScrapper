@@ -30,6 +30,7 @@ from ..progress.progress_config import (
     resolve_active_quests,
 )
 from ..progress.rules_generator import generate_rules_from_active, write_rules
+from ..items.rules_viewer import run_rules_viewer
 from .key_reader import key_reader
 from .ui_utils import window_for_cursor
 
@@ -483,6 +484,70 @@ def generate_rules_from_saved_progress(console: Console) -> int:
     return 0
 
 
+def review_saved_quests(console: Console) -> int:
+    try:
+        game_data = load_game_data()
+    except FileNotFoundError as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        return 1
+
+    settings = load_progress_settings()
+    if not has_saved_progress(settings):
+        console.print("[yellow]No saved progress found.[/yellow]")
+        return 1
+
+    quest_entries = _build_quest_entries(game_data.quests)
+    completed, active, _canceled = review_quests(
+        console,
+        quest_entries,
+        settings.completed_quests,
+        settings.active_quests,
+    )
+    updated = ProgressSettings(
+        all_quests_completed=(len(completed) == len(quest_entries)),
+        active_quests=active,
+        completed_quests=completed,
+        hideout_levels=settings.hideout_levels,
+        last_updated=_iso_now(),
+    )
+    save_progress_settings(updated)
+    console.print("[green]Quest progress saved.[/green]")
+    return 0
+
+
+def edit_saved_workshops(console: Console) -> int:
+    try:
+        game_data = load_game_data()
+    except FileNotFoundError as exc:
+        console.print(f"[red]Error:[/red] {exc}")
+        return 1
+
+    settings = load_progress_settings()
+    if not has_saved_progress(settings):
+        console.print("[yellow]No saved progress found.[/yellow]")
+        return 1
+
+    levels = edit_hideout_levels(
+        console,
+        game_data.hideout_modules,
+        existing_levels=settings.hideout_levels,
+    )
+    if levels is None:
+        console.print("[yellow]Workshop edit canceled.[/yellow]")
+        return 1
+
+    updated = ProgressSettings(
+        all_quests_completed=settings.all_quests_completed,
+        active_quests=settings.active_quests,
+        completed_quests=settings.completed_quests,
+        hideout_levels=levels,
+        last_updated=_iso_now(),
+    )
+    save_progress_settings(updated)
+    console.print("[green]Workshop levels saved.[/green]")
+    return 0
+
+
 def run_progress_wizard(console: Optional[Console] = None) -> int:
     console = console or Console()
     try:
@@ -565,6 +630,28 @@ def run_progress_wizard(console: Optional[Console] = None) -> int:
 
     write_rules(output, ITEM_RULES_CUSTOM_PATH)
     _display_rules_summary(console, output)
+
+    if Confirm.ask("Review quests/workshops/rules now?", default=False):
+        while True:
+            table = Table(show_header=False, box=None)
+            table.add_row("[cyan]1[/cyan]", "Review quests")
+            table.add_row("[cyan]2[/cyan]", "Edit workshop levels")
+            table.add_row("[cyan]3[/cyan]", "Review / edit rules")
+            table.add_row("[cyan]b[/cyan]", "Back")
+            console.print(table)
+            choice = Prompt.ask("Choose an option", default="b")
+            if choice == "1":
+                review_saved_quests(console)
+                continue
+            if choice == "2":
+                edit_saved_workshops(console)
+                continue
+            if choice == "3":
+                run_rules_viewer(console)
+                continue
+            if choice in {"b", "back", "q", "quit"}:
+                break
+
     return 0
 
 
@@ -608,58 +695,10 @@ def show_progress_menu(console: Optional[Console] = None) -> int:
             run_progress_wizard(console)
             continue
         if choice == "2":
-            try:
-                game_data = load_game_data()
-            except FileNotFoundError as exc:
-                console.print(f"[red]Error:[/red] {exc}")
-                continue
-            settings = load_progress_settings()
-            if not has_saved_progress(settings):
-                console.print("[yellow]No saved progress found.[/yellow]")
-                continue
-            completed, active, _canceled = review_quests(
-                console,
-                _build_quest_entries(game_data.quests),
-                settings.completed_quests,
-                settings.active_quests,
-            )
-            updated = ProgressSettings(
-                all_quests_completed=(
-                    len(completed)
-                    == len(_build_quest_entries(game_data.quests))
-                ),
-                active_quests=active,
-                completed_quests=completed,
-                hideout_levels=settings.hideout_levels,
-                last_updated=_iso_now(),
-            )
-            save_progress_settings(updated)
-            console.print("[green]Quest progress saved.[/green]")
+            review_saved_quests(console)
             continue
         if choice == "3":
-            try:
-                game_data = load_game_data()
-            except FileNotFoundError as exc:
-                console.print(f"[red]Error:[/red] {exc}")
-                continue
-            settings = load_progress_settings()
-            levels = edit_hideout_levels(
-                console,
-                game_data.hideout_modules,
-                existing_levels=settings.hideout_levels,
-            )
-            if levels is None:
-                console.print("[yellow]Workshop edit canceled.[/yellow]")
-                continue
-            updated = ProgressSettings(
-                all_quests_completed=settings.all_quests_completed,
-                active_quests=settings.active_quests,
-                completed_quests=settings.completed_quests,
-                hideout_levels=levels,
-                last_updated=_iso_now(),
-            )
-            save_progress_settings(updated)
-            console.print("[green]Workshop levels saved.[/green]")
+            edit_saved_workshops(console)
             continue
         if choice == "4":
             generate_rules_from_saved_progress(console)
