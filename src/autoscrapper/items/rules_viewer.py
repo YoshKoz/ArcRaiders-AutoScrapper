@@ -160,6 +160,7 @@ def run_rules_viewer(console: Optional[Console] = None) -> int:
             ) as live:
                 while True:
                     key = read_key()
+                    max_index = max(0, len(filtered) - 1)
                     if search_mode:
                         if key.name == "ENTER":
                             query = search_buffer.strip()
@@ -191,15 +192,15 @@ def run_rules_viewer(console: Optional[Console] = None) -> int:
                     if key.name == "UP":
                         cursor = max(0, cursor - 1)
                     elif key.name == "DOWN":
-                        cursor = min(len(filtered) - 1, cursor + 1)
+                        cursor = min(max_index, cursor + 1)
                     elif key.name == "PAGE_UP":
                         cursor = max(0, cursor - 10)
                     elif key.name == "PAGE_DOWN":
-                        cursor = min(len(filtered) - 1, cursor + 10)
+                        cursor = min(max_index, cursor + 10)
                     elif key.name == "HOME":
                         cursor = 0
                     elif key.name == "END":
-                        cursor = max(0, len(filtered) - 1)
+                        cursor = max_index
                     elif key.name == "CHAR":
                         if key.char in {"/"}:
                             search_mode = True
