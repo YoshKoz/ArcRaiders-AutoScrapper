@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
+import sys
 from typing import Callable, Optional
 
 from rich import box
 from rich.console import Console, Group
+from rich.live import Live
 from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
@@ -29,6 +31,7 @@ from .progress_flow import (
     run_update_data,
 )
 from ..items.rules_viewer import run_rules_viewer
+from .key_reader import key_reader
 from .warnings import maybe_warn_default_rules
 
 MenuHandler = Callable[[], object]
@@ -115,7 +118,9 @@ def _render_menu_panel(
     actions: dict[str, str],
     *,
     default_key: str,
+    selected_key: Optional[str] = None,
     border_style: str = "cyan",
+    help_text: Optional[Text] = None,
 ) -> Panel:
     table = Table.grid(padding=(0, 1))
     table.add_column(justify="right", width=4)
@@ -123,14 +128,17 @@ def _render_menu_panel(
 
     for key, label in actions.items():
         is_default = key == default_key
+        is_selected = key == selected_key
         key_style = "bold yellow" if is_default else "bold cyan"
         label_text = Text(label, style="bold" if is_default else "")
         if is_default:
             label_text.append("  (recommended)", style="dim")
-        table.add_row(Text(key, style=key_style), label_text)
+        row_style = "reverse" if is_selected else None
+        table.add_row(Text(key, style=key_style), label_text, style=row_style)
 
+    body = Group(table, help_text) if help_text else table
     return Panel(
-        table,
+        body,
         title=Text(title, style="bold"),
         border_style=border_style,
         box=box.ROUNDED,
@@ -143,6 +151,98 @@ def _prompt_menu_choice(prompt: str, *, default: str) -> str:
     return raw.strip().lower()
 
 
+def _interactive_menu_supported(console: Console) -> bool:
+    return console.is_terminal and sys.stdin.isatty() and sys.stdout.isatty()
+
+
+def _menu_help_text(actions: dict[str, str]) -> Text:
+    base = "↑/↓ move • Enter select • number/letter jump"
+    extras = []
+    if "b" in actions:
+        extras.append("b back")
+    if "q" in actions:
+        extras.append("q quit")
+    if extras:
+        base = f"{base} • {' • '.join(extras)}"
+    return Text(base, style="dim")
+
+
+def _choose_menu_action(
+    console: Console,
+    title: str,
+    actions: dict[str, str],
+    *,
+    default_key: str,
+    prompt: str,
+    border_style: str = "cyan",
+) -> str:
+    if not actions:
+        return default_key
+
+    if not _interactive_menu_supported(console):
+        console.print(
+            _render_menu_panel(
+                title,
+                actions,
+                default_key=default_key,
+                border_style=border_style,
+            )
+        )
+        return _prompt_menu_choice(prompt, default=default_key)
+
+    keys = list(actions.keys())
+    selected_index = keys.index(default_key) if default_key in keys else 0
+    help_text = _menu_help_text(actions)
+
+    with key_reader() as read_key:
+        with Live(
+            _render_menu_panel(
+                title,
+                actions,
+                default_key=default_key,
+                selected_key=keys[selected_index],
+                border_style=border_style,
+                help_text=help_text,
+            ),
+            console=console,
+            refresh_per_second=20,
+            transient=True,
+        ) as live:
+            while True:
+                key = read_key()
+                if key.name == "UP":
+                    selected_index = (selected_index - 1) % len(keys)
+                elif key.name == "DOWN":
+                    selected_index = (selected_index + 1) % len(keys)
+                elif key.name == "HOME":
+                    selected_index = 0
+                elif key.name == "END":
+                    selected_index = len(keys) - 1
+                elif key.name == "ENTER":
+                    return keys[selected_index]
+                elif key.name == "ESC":
+                    if "b" in actions:
+                        return "b"
+                    if "q" in actions:
+                        return "q"
+                    return keys[selected_index]
+                elif key.name == "CHAR" and key.char:
+                    char = key.char.lower()
+                    if char in actions:
+                        return char
+                live.update(
+                    _render_menu_panel(
+                        title,
+                        actions,
+                        default_key=default_key,
+                        selected_key=keys[selected_index],
+                        border_style=border_style,
+                        help_text=help_text,
+                    ),
+                    refresh=True,
+                )
+
+
 def _scan_menu(console: Console) -> None:
     actions: dict[str, tuple[str, Optional[MenuHandler]]] = {
         "1": ("Scan now", lambda: scan_cli.main([])),
@@ -152,14 +252,13 @@ def _scan_menu(console: Console) -> None:
 
     while True:
         console.print()
-        console.print(
-            _render_menu_panel(
-                "Scan",
-                {k: v[0] for k, v in actions.items()},
-                default_key="1",
-            )
+        choice = _choose_menu_action(
+            console,
+            "Scan",
+            {k: v[0] for k, v in actions.items()},
+            default_key="1",
+            prompt="Select an option",
         )
-        choice = _prompt_menu_choice("Select an option", default="1")
         if choice in {"b", "back", "q", "quit"}:
             return
         if choice not in actions:
@@ -191,14 +290,13 @@ def _progress_menu(console: Console) -> None:
 
     while True:
         console.print()
-        console.print(
-            _render_menu_panel(
-                "Progress",
-                {k: v[0] for k, v in actions.items()},
-                default_key="1",
-            )
+        choice = _choose_menu_action(
+            console,
+            "Progress",
+            {k: v[0] for k, v in actions.items()},
+            default_key="1",
+            prompt="Select an option",
         )
-        choice = _prompt_menu_choice("Select an option", default="1")
         if choice in {"b", "back", "q", "quit"}:
             return
         if choice not in actions:
@@ -220,14 +318,13 @@ def _rules_menu(console: Console) -> None:
 
     while True:
         console.print()
-        console.print(
-            _render_menu_panel(
-                "Rules",
-                {k: v[0] for k, v in actions.items()},
-                default_key="1",
-            )
+        choice = _choose_menu_action(
+            console,
+            "Rules",
+            {k: v[0] for k, v in actions.items()},
+            default_key="1",
+            prompt="Select an option",
         )
-        choice = _prompt_menu_choice("Select an option", default="1")
         if choice in {"b", "back", "q", "quit"}:
             return
         if choice not in actions:
@@ -249,14 +346,13 @@ def _settings_menu(console: Console) -> None:
 
     while True:
         console.print()
-        console.print(
-            _render_menu_panel(
-                "Settings",
-                {k: v[0] for k, v in actions.items()},
-                default_key="1",
-            )
+        choice = _choose_menu_action(
+            console,
+            "Settings",
+            {k: v[0] for k, v in actions.items()},
+            default_key="1",
+            prompt="Select an option",
         )
-        choice = _prompt_menu_choice("Select an option", default="1")
         if choice in {"b", "back", "q", "quit"}:
             return
         if choice not in actions:
@@ -280,15 +376,14 @@ def _maintenance_menu(console: Console) -> None:
 
     while True:
         console.print()
-        console.print(
-            _render_menu_panel(
-                "Maintenance",
-                {k: v[0] for k, v in actions.items()},
-                default_key="1",
-                border_style="magenta",
-            )
+        choice = _choose_menu_action(
+            console,
+            "Maintenance",
+            {k: v[0] for k, v in actions.items()},
+            default_key="1",
+            border_style="magenta",
+            prompt="Select an option",
         )
-        choice = _prompt_menu_choice("Select an option", default="1")
         if choice in {"b", "back", "q", "quit"}:
             return
         if choice not in actions:
@@ -324,15 +419,13 @@ def show_home_menu(console: Optional[Console] = None) -> int:
         _render_status_panel(console, progress_settings)
 
         recommended = "2" if not has_saved_progress(progress_settings) else "1"
-        console.print(
-            _render_menu_panel(
-                "Main menu",
-                {k: v[0] for k, v in actions.items()},
-                default_key=recommended,
-            )
+        choice = _choose_menu_action(
+            console,
+            "Main menu",
+            {k: v[0] for k, v in actions.items()},
+            default_key=recommended,
+            prompt="What would you like to do?",
         )
-
-        choice = _prompt_menu_choice("What would you like to do?", default=recommended)
         if choice in {"q", "quit"}:
             return 0
         if choice not in actions:
