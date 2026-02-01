@@ -4,7 +4,6 @@ import sys
 import time
 from typing import Optional
 
-
 if sys.platform == "win32":
     import ctypes
     from ctypes import wintypes

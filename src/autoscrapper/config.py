@@ -6,7 +6,6 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, Literal, Optional
 
-
 CONFIG_VERSION = 1
 APP_CONFIG_DIR_NAME = "AutoScrapper"
 CONFIG_FILE_NAME = "config.json"
