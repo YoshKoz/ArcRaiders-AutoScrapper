@@ -19,10 +19,10 @@ if sys.platform == "win32":
     _GetAsyncKeyState.argtypes = [wintypes.INT]
     _GetAsyncKeyState.restype = wintypes.SHORT
 
-    _VK_ESCAPE = 0x1B
+    _VK_F12 = 0x7B  # F12 key (avoids conflict with in-game Escape)
 
     def escape_pressed() -> bool:
-        state = _GetAsyncKeyState(_VK_ESCAPE)
+        state = _GetAsyncKeyState(_VK_F12)
         return bool(state & 0x8000) or bool(state & 0x0001)
 
     def moveTo(x: int, y: int, duration: float = 0.0) -> None:
@@ -64,7 +64,7 @@ elif sys.platform.startswith("linux"):
 
             def on_press(key) -> None:
                 _KEY_STATE.add(key)
-                if key == keyboard.Key.esc:
+                if key == keyboard.Key.f12:
                     _ESCAPE_PRESSED.set()
 
             def on_release(key) -> None:
@@ -77,7 +77,7 @@ elif sys.platform.startswith("linux"):
 
     def escape_pressed() -> bool:
         _ensure_key_listener()
-        if keyboard.Key.esc in _KEY_STATE:
+        if keyboard.Key.f12 in _KEY_STATE:
             return True
         if _ESCAPE_PRESSED.is_set():
             _ESCAPE_PRESSED.clear()

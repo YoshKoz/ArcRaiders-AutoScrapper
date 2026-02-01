@@ -88,21 +88,21 @@
     "index": 13,
     "name": "ARC Performance Steel",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 14,
     "name": "ARC Powercell",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 15,
     "name": "ARC Synthetic Resin",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -200,7 +200,7 @@
     "index": 29,
     "name": "Candle Holder",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -256,7 +256,7 @@
     "index": 37,
     "name": "Cracked Bioscanner",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -298,7 +298,7 @@
     "index": 43,
     "name": "Damaged Heat Sink",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -361,7 +361,7 @@
     "index": 52,
     "name": "Dog Collar",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -424,35 +424,28 @@
     "index": 61,
     "name": "Fabric",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 62,
     "name": "Fertilizer",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 63,
     "name": "Fireball Burner",
     "decision": [
-      "SELL"
-    ]
-  },
-  {
-    "index": 64,
-    "name": "Fireball Burner",
-    "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 65,
     "name": "Flow Controller",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -466,7 +459,7 @@
     "index": 67,
     "name": "Frequency Modulation Box",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -480,7 +473,7 @@
     "index": 69,
     "name": "Frying Pan",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -494,14 +487,14 @@
     "index": 71,
     "name": "Geiger Counter",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 72,
     "name": "Great Mullein",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -522,7 +515,7 @@
     "index": 75,
     "name": "Hornet Driver",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -578,7 +571,7 @@
     "index": 83,
     "name": "Ion Sputter",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -634,7 +627,7 @@
     "index": 91,
     "name": "Magnetron",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -746,7 +739,7 @@
     "index": 107,
     "name": "Pop Trigger",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -767,7 +760,7 @@
     "index": 110,
     "name": "Power Cable",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -956,7 +949,7 @@
     "index": 137,
     "name": "Rusted Tools",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1005,7 +998,7 @@
     "index": 144,
     "name": "Shredder Gyro",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1026,14 +1019,14 @@
     "index": 147,
     "name": "Snitch Scanner",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 148,
     "name": "Speaker Component",
     "decision": [
-      "CRAFTING MATERIAL"
+      "SELL"
     ]
   },
   {
@@ -1082,7 +1075,7 @@
     "index": 155,
     "name": "Synthesized Fuel",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1124,14 +1117,14 @@
     "index": 161,
     "name": "Tick Pod",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 162,
     "name": "Toaster",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1152,7 +1145,6 @@
     "index": 165,
     "name": "Unusable Weapon",
     "decision": [
-      "RECYCLE",
       "SELL"
     ]
   },
@@ -1181,21 +1173,21 @@
     "index": 169,
     "name": "Wasp Driver",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 170,
     "name": "Water Filter",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 171,
     "name": "Water Pump",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1230,14 +1222,14 @@
     "index": 176,
     "name": "Coffee Pot",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
     "index": 177,
     "name": "Empty Wine Bottle",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1272,7 +1264,7 @@
     "index": 182,
     "name": "Film Reel",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1314,7 +1306,7 @@
     "index": 188,
     "name": "Music Album",
     "decision": [
-      "SELL"
+      "KEEP"
     ]
   },
   {
@@ -1369,6 +1361,391 @@
   {
     "index": 196,
     "name": "Lance's Mixtape (5th Edition)",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 197,
+    "name": "Candleberries",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 198,
+    "name": "Fossilized Lightning",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 199,
+    "name": "Agave Juice",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 200,
+    "name": "Snap Blast Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 201,
+    "name": "Microscope",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 202,
+    "name": "Spectrum Analyzer",
+    "decision": [
+      "RECYCLE"
+    ]
+  },
+  {
+    "index": 203,
+    "name": "Recorder",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 204,
+    "name": "Firecracker",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 205,
+    "name": "Fireworks Box",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 206,
+    "name": "Blue Light Stick",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 207,
+    "name": "Bandage",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 208,
+    "name": "Blue Gate",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 209,
+    "name": "Dam Surveillance Key",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 210,
+    "name": "Green Light Stick",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 211,
+    "name": "Lil Smoke Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 212,
+    "name": "Medium Ammo",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 213,
+    "name": "Noisemaker",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 214,
+    "name": "Red Light Stick",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 215,
+    "name": "Remote Raider Flare",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 216,
+    "name": "Zipline",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 217,
+    "name": "Agave Juice",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 218,
+    "name": "Air Freshener",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 219,
+    "name": "Sentinel Part",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 220,
+    "name": "Spring",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 221,
+    "name": "Explosive Mixture",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 222,
+    "name": "Flute",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 223,
+    "name": "Fruit Mix",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 224,
+    "name": "Herbal Bandage",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 225,
+    "name": "Sterilized Bandage",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 226,
+    "name": "Vita Spray",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 227,
+    "name": "Vita Shot",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 228,
+    "name": "Smoke Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 229,
+    "name": "Shrapnel Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 230,
+    "name": "Seeker Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 231,
+    "name": "Pulse Mine",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 232,
+    "name": "Lure Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 233,
+    "name": "Tagging Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 234,
+    "name": "Jolt Mine",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 235,
+    "name": "Explosive Mine",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 236,
+    "name": "Blaze Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 237,
+    "name": "Heavy Fuze Grenade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 238,
+    "name": "Tigger Nade",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 239,
+    "name": "Flame Spray",
+    "decision": [
+      "SELL"
+    ]
+  },
+  {
+    "index": 240,
+    "name": "Light Shield",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 241,
+    "name": "Medium Shield",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 242,
+    "name": "Heavy Shield",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 243,
+    "name": "Shield Recharger",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 244,
+    "name": "Surge Shield Recharger",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 245,
+    "name": "Energy Clip",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 246,
+    "name": "Photoelectric Cloak",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 247,
+    "name": "Snap Hook",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 248,
+    "name": "Raider Hatch Key",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 249,
+    "name": "Defibrilator",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 250,
+    "name": "Defibrillator",
+    "decision": [
+      "KEEP"
+    ]
+  },
+  {
+    "index": 251,
+    "name": "Barricade Kit",
     "decision": [
       "SELL"
     ]

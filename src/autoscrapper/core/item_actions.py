@@ -36,7 +36,8 @@ def normalize_item_name(name: str) -> str:
 
 def clean_ocr_text(raw: str) -> str:
     text = " ".join(raw.split())
-    text = re.sub(r"[^-A-Za-z0-9 '()\\]+", "", text)
+    # Keep letters, numbers, common punctuation - be permissive
+    text = re.sub(r"[^-A-Za-z0-9 '(),.!?:&+]+", "", text)
     return text.strip()
 
 

@@ -14,11 +14,11 @@ from .tesseract import image_to_data, image_to_string
 
 # Infobox visual characteristics
 INFOBOX_COLOR_BGR = np.array([223, 238, 249], dtype=np.uint8)  # #f9eedf in BGR
-INFOBOX_TOLERANCE = 8
+INFOBOX_TOLERANCE = 30  # Increased tolerance for color variations
 # Expected infobox size, normalized to the active window
 INFOBOX_TARGET_NORM_W = 0.132
 INFOBOX_TARGET_NORM_H = 0.268
-INFOBOX_SCALE_MIN = 0.8  # accept down to 80% of the expected size
+INFOBOX_SCALE_MIN = 0.5  # accept down to 50% of the expected size
 INFOBOX_MIN_NORM_W = INFOBOX_TARGET_NORM_W * INFOBOX_SCALE_MIN
 INFOBOX_MIN_NORM_H = INFOBOX_TARGET_NORM_H * INFOBOX_SCALE_MIN
 
@@ -117,10 +117,17 @@ def is_slot_empty(
 
 def find_infobox(bgr_image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
     """
-    Locate the largest rectangle that matches the infobox background color.
+    Locate the item infobox rectangle that matches the infobox background color.
+    The infobox is a tall, narrow panel showing item details.
+    We prefer taller rectangles but accept any that meet minimum size.
     Returns (x, y, w, h) relative to the provided image, or None if not found.
     """
     kernel = np.ones((3, 3), np.uint8)
+    window_height, window_width = bgr_image.shape[:2]
+
+    # Prefer taller rectangles but don't strictly require it
+    # Context menus are typically wider than tall, infobox is taller than wide
+    PREFERRED_ASPECT_RATIO = 0.8  # h/w >= 0.8 preferred (slightly lenient)
 
     def _meets_min_infobox_size(
         w: int, h: int, window_width: int, window_height: int
@@ -129,16 +136,28 @@ def find_infobox(bgr_image: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
             return False
         norm_w = w / float(window_width)
         norm_h = h / float(window_height)
-        return norm_w >= INFOBOX_MIN_NORM_W and norm_h >= INFOBOX_MIN_NORM_H
+        # More lenient: require at least 40% of expected size
+        return norm_w >= INFOBOX_MIN_NORM_W * 0.8 and norm_h >= INFOBOX_MIN_NORM_H * 0.8
+
+    def _infobox_score(x: int, y: int, w: int, h: int) -> float:
+        """Score a candidate rectangle - higher is better."""
+        area = w * h
+        aspect = h / max(1, w)
+        # Bonus for tall aspect ratios (more likely to be infobox)
+        aspect_bonus = 1.5 if aspect >= PREFERRED_ASPECT_RATIO else 1.0
+        # Prefer rectangles on the right side of screen (where infobox appears)
+        position_bonus = 1.2 if x > window_width * 0.3 else 1.0
+        return area * aspect_bonus * position_bonus
 
     def _find_from_mask(mask: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        candidates: List[Tuple[int, Tuple[int, int, int, int]]] = []
-        window_height, window_width = mask.shape[:2]
+        candidates: List[Tuple[float, Tuple[int, int, int, int]]] = []
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
             if _meets_min_infobox_size(w, h, window_width, window_height):
-                candidates.append((w * h, (x, y, w, h)))
+                # Score candidates instead of strict filtering
+                score = _infobox_score(x, y, w, h)
+                candidates.append((score, (x, y, w, h)))
         if not candidates:
             return None
         _, best_rect = max(candidates, key=lambda item: item[0])
@@ -271,9 +290,44 @@ def recycle_confirm_button_center(
     )
 
 
-def preprocess_for_ocr(roi_bgr: np.ndarray) -> np.ndarray:
+def preprocess_for_ocr(roi_bgr: np.ndarray, upscale: bool = True) -> np.ndarray:
+    """
+    Preprocess an image region for OCR.
+
+    Steps:
+    1. Optionally upscale small images for better OCR accuracy
+    2. Convert to grayscale
+    3. Apply bilateral filter to reduce noise while preserving edges
+    4. Apply adaptive thresholding with Otsu fallback
+    """
+    if roi_bgr.size == 0:
+        return roi_bgr
+
+    # Upscale small images for better OCR accuracy
+    h, w = roi_bgr.shape[:2]
+    if upscale and (h < 50 or w < 100):
+        scale = max(2, min(4, 100 // max(1, min(h, w))))
+        roi_bgr = cv2.resize(roi_bgr, (w * scale, h * scale), interpolation=cv2.INTER_CUBIC)
+
     gray = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2GRAY)
-    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    # Apply bilateral filter to reduce noise while keeping text edges sharp
+    gray = cv2.bilateralFilter(gray, 9, 75, 75)
+
+    # Try adaptive thresholding first, fall back to Otsu if it fails
+    try:
+        # Adaptive thresholding works better for varying lighting conditions
+        binary = cv2.adaptiveThreshold(
+            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        )
+        # Check if the result is mostly one color (likely failed)
+        white_ratio = np.mean(binary > 127)
+        if white_ratio < 0.1 or white_ratio > 0.9:
+            # Fall back to Otsu
+            _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    except Exception:
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
     return binary
 
 
@@ -306,13 +360,61 @@ def _save_debug_image(name: str, image: np.ndarray) -> None:
         print(f"[vision_ocr] failed to save debug image {path}: {exc}", flush=True)
 
 
+# Context menu text patterns that should NOT be recognized as item names
+CONTEXT_MENU_PATTERNS = {
+    "split stack",
+    "move to backpack",
+    "move to stash",
+    "sell",
+    "recycle",
+    "drop",
+    "equip",
+    "unequip",
+    "use",
+    "obtained from",
+    "used to craft",
+    "can be recycled",
+    "cannot be recycled",
+    "into crafting materials",
+    "a wide range of items",
+    # Description text patterns
+    "explosives, and utility",
+    "utility items",
+    "grenade, pulse mine",
+    "pulse mine, snap",
+    "snap blast",
+    "crafting materials",
+    "can be used",
+    "used for",
+    "required for",
+    "workshop project",
+    # More description fragments
+    "grenade, shrapnel",
+    "shrapnel grenade",
+    "singularity",
+    "ferro, kettle",
+    "kettle, medium",
+}
+
+
+def _is_context_menu_text(text: str) -> bool:
+    """Check if the text looks like context menu or description text, not an item name."""
+    text_lower = text.lower().strip()
+    for pattern in CONTEXT_MENU_PATTERNS:
+        if pattern in text_lower:
+            return True
+    return False
+
+
 def _extract_title_from_data(
     ocr_data: Dict[str, List],
     image_height: int,
-    top_fraction: float = 0.22,
+    top_fraction: float = 0.45,
 ) -> Tuple[str, str]:
     """
     Choose the best-confidence line near the top of the infobox as the title.
+    Filters out context menu text and description fragments.
+    Increased top_fraction to 0.45 to catch titles that appear lower.
     """
     texts = ocr_data.get("text", [])
     if not texts:
@@ -353,15 +455,37 @@ def _extract_title_from_data(
                 continue
         return sum(confs) / len(confs) if confs else -1.0
 
-    best_key = max(groups.keys(), key=lambda k: _group_score(groups[k]))
-    ordered_indices = sorted(groups[best_key])
-    cleaned_parts = [
-        clean_ocr_text(texts[i] or "") for i in ordered_indices if texts[i]
-    ]
-    raw_parts = [(texts[i] or "").strip() for i in ordered_indices if texts[i]]
-    cleaned = " ".join(p for p in cleaned_parts if p).strip()
-    raw = " ".join(p for p in raw_parts if p).strip()
-    return cleaned, raw
+    # Sort groups by score and try to find a valid title (not context menu text)
+    sorted_keys = sorted(groups.keys(), key=lambda k: _group_score(groups[k]), reverse=True)
+
+    for key in sorted_keys:
+        ordered_indices = sorted(groups[key])
+        cleaned_parts = [
+            clean_ocr_text(texts[i] or "") for i in ordered_indices if texts[i]
+        ]
+        raw_parts = [(texts[i] or "").strip() for i in ordered_indices if texts[i]]
+        cleaned = " ".join(p for p in cleaned_parts if p).strip()
+        raw = " ".join(p for p in raw_parts if p).strip()
+
+        # Skip if this looks like context menu or description text
+        if _is_context_menu_text(cleaned) or _is_context_menu_text(raw):
+            continue
+
+        if cleaned:  # Found a valid title
+            return cleaned, raw
+
+    # Fallback: if we found raw text but cleaning removed everything, try less aggressive cleaning
+    for key in sorted_keys:
+        ordered_indices = sorted(groups[key])
+        raw_parts = [(texts[i] or "").strip() for i in ordered_indices if texts[i]]
+        raw = " ".join(p for p in raw_parts if p).strip()
+        if raw and not _is_context_menu_text(raw):
+            # Extract just uppercase words (item names are typically all caps)
+            words = re.findall(r'[A-Z][A-Z0-9]+(?:\s+[A-Z][A-Z0-9]+)*', raw)
+            if words:
+                return words[0], raw
+
+    return "", ""
 
 
 def _extract_action_line_bbox(

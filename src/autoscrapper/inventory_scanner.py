@@ -109,9 +109,9 @@ from .config import load_scan_settings
 # Configuration
 # ---------------------------------------------------------------------------
 
-MENU_APPEAR_DELAY = 0.05
-INFOBOX_RETRY_DELAY = 0.05
-INFOBOX_RETRIES = 3
+MENU_APPEAR_DELAY = 0.08  # Brief pause after opening menu
+INFOBOX_RETRY_DELAY = 0.06  # Short delay between retries
+INFOBOX_RETRIES = 4  # Retry attempts to find the infobox
 
 
 @dataclass
@@ -224,8 +224,8 @@ def _scroll_clicks_sequence(start_clicks: int) -> Iterable[int]:
 def scan_inventory(
     window_timeout: float = WINDOW_TIMEOUT,
     infobox_retries: int = INFOBOX_RETRIES,
-    ocr_unreadable_retries: int = 1,
-    ocr_unreadable_retry_delay_ms: int = 100,
+    ocr_unreadable_retries: int = 3,
+    ocr_unreadable_retry_delay_ms: int = 150,
     show_progress: bool = True,
     pages: Optional[int] = None,
     scroll_clicks_per_page: int = SCROLL_CLICKS_PER_PAGE,
@@ -233,6 +233,7 @@ def scan_inventory(
     actions_path: Path = ITEM_ACTIONS_PATH,
     actions_override: Optional[ActionMap] = None,
     profile_timing: bool = False,
+    disable_early_stop: bool = False,
 ) -> Tuple[List[ItemActionResult], ScanStats]:
     """
     Walk each 4x5 grid (top-to-bottom, left-to-right), OCR each cell's item
@@ -243,6 +244,9 @@ def scan_inventory(
     to handle the carousel offset. If `pages` is not provided, the script will
     OCR the always-visible stash count label to automatically determine how
     many 4x5 grids to scan.
+
+    If disable_early_stop is True, the scanner will NOT stop when detecting
+    consecutive empty slots - it will scan all pages.
     """
     if infobox_retries < 1:
         raise ValueError("infobox_retries must be >= 1")
@@ -342,7 +346,8 @@ def scan_inventory(
     auto_pages = (
         math.ceil(stash_items / cells_per_page) if stash_items is not None else None
     )
-    pages_to_scan = pages if pages is not None else auto_pages or 1
+    # Default to 50 pages (1000 items) when stash count OCR fails, to scan the full inventory
+    pages_to_scan = pages if pages is not None else auto_pages or 50
     pages_to_scan = max(1, pages_to_scan)
     pages_source = "cli" if pages is not None else "auto"
     items_label = stash_items if stash_items is not None else "?"
@@ -421,6 +426,9 @@ def scan_inventory(
     scroll_sequence = _scroll_clicks_sequence(scroll_clicks_per_page)
     stop_scan = False
 
+    # When disable_early_stop is True, we don't set stop_at_global_idx
+    skip_empty_detection = disable_early_stop
+
     try:
         for page in range(pages_to_scan):
             page_base_idx = page * cells_per_page
@@ -443,7 +451,7 @@ def scan_inventory(
                 win_width,
                 win_height,
                 safe_point_abs,
-            )
+            ) if not skip_empty_detection else None
             if empty_idx is not None and (
                 stop_at_global_idx is None or empty_idx < stop_at_global_idx
             ):
@@ -497,23 +505,35 @@ def scan_inventory(
                 capture_attempts = 0
                 found_on_attempt = 0
                 raw_item_text = ""
+                menu_reopen_attempts = 0
+                max_menu_reopen_attempts = 2
 
-                for attempt in range(1, infobox_retries + 1):
-                    capture_attempts += 1
-                    abort_if_escape_pressed()
-                    capture_start = time.perf_counter()
-                    window_bgr = capture_region(
-                        (win_left, win_top, win_width, win_height)
-                    )
-                    capture_time += time.perf_counter() - capture_start
-                    find_start = time.perf_counter()
-                    infobox_rect = find_infobox(window_bgr)
-                    find_time += time.perf_counter() - find_start
-                    if infobox_rect:
-                        found_on_attempt = attempt
+                while infobox_rect is None and menu_reopen_attempts <= max_menu_reopen_attempts:
+                    for attempt in range(1, infobox_retries + 1):
+                        capture_attempts += 1
+                        abort_if_escape_pressed()
+                        capture_start = time.perf_counter()
+                        window_bgr = capture_region(
+                            (win_left, win_top, win_width, win_height)
+                        )
+                        capture_time += time.perf_counter() - capture_start
+                        find_start = time.perf_counter()
+                        infobox_rect = find_infobox(window_bgr)
+                        find_time += time.perf_counter() - find_start
+                        if infobox_rect:
+                            found_on_attempt = attempt
+                            break
+                        sleep_with_abort(INFOBOX_RETRY_DELAY)
+                        pause_action()
+
+                    if infobox_rect is None and menu_reopen_attempts < max_menu_reopen_attempts:
+                        # Infobox not found after retries, try reopening the cell menu
+                        menu_reopen_attempts += 1
+                        open_cell_menu(cell, win_left, win_top)
+                        sleep_with_abort(MENU_APPEAR_DELAY * 1.5)  # Extra delay after reopen
+                        pause_action()
+                    else:
                         break
-                    sleep_with_abort(INFOBOX_RETRY_DELAY)
-                    pause_action()
 
                 item_name = ""
                 if infobox_rect and window_bgr is not None:
@@ -1302,6 +1322,11 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
         action="store_true",
         help="Scan only; log planned actions without clicking sell/recycle.",
     )
+    parser.add_argument(
+        "--no-early-stop",
+        action="store_true",
+        help="Disable early stop on consecutive empty slots; scan all pages.",
+    )
 
     profile_group = parser.add_mutually_exclusive_group()
     profile_group.add_argument(
@@ -1349,9 +1374,10 @@ def main(argv: Optional[Iterable[str]] = None) -> int:
             profile_timing=args.profile,
             ocr_unreadable_retries=settings.ocr_unreadable_retries,
             ocr_unreadable_retry_delay_ms=settings.ocr_unreadable_retry_delay_ms,
+            disable_early_stop=args.no_early_stop,
         )
     except KeyboardInterrupt:
-        print("Aborted by Escape key.")
+        print("Aborted by F12 key.")
         return 0
     except ValueError as exc:
         print(f"Error: {exc}")

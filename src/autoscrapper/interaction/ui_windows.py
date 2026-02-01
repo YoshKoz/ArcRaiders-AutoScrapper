@@ -46,17 +46,17 @@ _MSS: Optional["MSSBase"] = None
 
 def escape_pressed() -> bool:
     """
-    Detect whether Escape is currently pressed.
+    Detect whether F12 is currently pressed (abort key).
     """
     return pdi.escape_pressed()
 
 
 def abort_if_escape_pressed() -> None:
     """
-    Raise KeyboardInterrupt if Escape is down.
+    Raise KeyboardInterrupt if F12 is down.
     """
     if escape_pressed():
-        raise KeyboardInterrupt("Escape pressed")
+        raise KeyboardInterrupt("F12 pressed")
 
 
 def wait_for_target_window(
