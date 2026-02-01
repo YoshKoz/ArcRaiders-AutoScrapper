@@ -316,5 +316,7 @@ def _detect_cells_by_contours(inv_bgr: np.ndarray, cell_size: int) -> List[dict]
             }
         )
 
-    cells.sort(key=lambda c: (c["y"], c["x"]))
+    # Sort row-major: group by row (y divided by cell_size), then by x within row
+    # This ensures left-to-right order even if y values vary slightly
+    cells.sort(key=lambda c: (c["y"] // max(1, cell_size // 2), c["x"]))
     return cells
