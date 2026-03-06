@@ -19,7 +19,8 @@ function Confirm-Step {
     if ($Commands.Count -eq 1) {
       Write-Host "Command to run:"
       Write-Host "  $($Commands[0])"
-    } else {
+    }
+    else {
       Write-Host "Commands to run:"
       foreach ($command in $Commands) {
         Write-Host "  $command"
@@ -29,7 +30,8 @@ function Confirm-Step {
 
   try {
     $response = Read-Host "Proceed? [Y/n]"
-  } catch {
+  }
+  catch {
     return $false
   }
 
@@ -68,7 +70,7 @@ $uvHome = if ($HOME) { $HOME } elseif ($env:USERPROFILE) { $env:USERPROFILE } el
 $uvInstallDir = Join-Path $uvHome ".local/bin"
 $uvExe = $null
 
-function Prepend-Path {
+function Add-PathPrefix {
   param(
     [Parameter(Mandatory)]
     [string]$Dir
@@ -92,7 +94,8 @@ function Prepend-Path {
 
   if ($env:Path) {
     $env:Path = "$dirNormalized;$env:Path"
-  } else {
+  }
+  else {
     $env:Path = $dirNormalized
   }
 }
@@ -104,8 +107,8 @@ if ($existingUv -and ($existingUv.CommandType -eq "Application") -and $existingU
 
 if (-not $uvExe) {
   Confirm-OrAbort (Confirm-Step `
-    -Title "Step 1: Install uv (required)" `
-    -Commands @(
+      -Title "Step 1: Install uv (required)" `
+      -Commands @(
       ('$env:UV_INSTALL_DIR = "' + $uvInstallDir + '"'),
       "irm $uvInstallUrl | iex"
     ) `
@@ -117,7 +120,8 @@ if (-not $uvExe) {
 
   if ($null -ne $previousUvInstallDir) {
     $env:UV_INSTALL_DIR = $previousUvInstallDir
-  } else {
+  }
+  else {
     Remove-Item Env:UV_INSTALL_DIR -ErrorAction SilentlyContinue
   }
 
@@ -145,7 +149,7 @@ if (-not $uvExe) {
     exit 1
   }
 
-  Prepend-Path (Split-Path -Parent $uvExe)
+  Add-PathPrefix (Split-Path -Parent $uvExe)
 
   if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
     Write-Error "uv still isn't working in this PowerShell window."
@@ -157,21 +161,21 @@ if (-not $uvExe) {
 
 # 2) We recommend Python 3.13 but support Python 3.10 to 3.13
 Confirm-OrAbort (Confirm-Step `
-  -Title "Step 2: Install Python $PythonVersion" `
-  -Commands @('& "' + $uvExe + '" python install ' + $PythonVersion) `
+    -Title "Step 2: Install Python $PythonVersion" `
+    -Commands @('& "' + $uvExe + '" python install ' + $PythonVersion) `
 )
 & $uvExe python install $PythonVersion
 
 Confirm-OrAbort (Confirm-Step `
-  -Title "Step 3: Pin Python $PythonVersion" `
-  -Commands @('& "' + $uvExe + '" python pin ' + $PythonVersion) `
+    -Title "Step 3: Pin Python $PythonVersion" `
+    -Commands @('& "' + $uvExe + '" python pin ' + $PythonVersion) `
 )
 & $uvExe python pin $PythonVersion
 
 # 3) Install project dependencies with uv
 Confirm-OrAbort (Confirm-Step `
-  -Title "Step 4: Install project dependencies" `
-  -Commands @('& "' + $uvExe + '" sync') `
+    -Title "Step 4: Install project dependencies" `
+    -Commands @('& "' + $uvExe + '" sync') `
 )
 & $uvExe sync
 
