@@ -217,6 +217,9 @@ __marimo__/
 
 # Local contributor docs (not tracked)
 AGENTS.md
+.claude/
+.vscode/
+misplaced_files_2026-02-26_pokemon_go/
 
 # AutoScrapper custom rules (user-specific)
 src/autoscrapper/items/items_rules.custom.json
