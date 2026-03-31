@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "generatedAt": "2026-03-04T20:35:34.509012Z",
+    "generatedAt": "2026-03-31T14:53:23.149493Z",
     "data": {
-      "lastUpdated": "2026-03-04T20:35:34.493548Z",
+      "lastUpdated": "2026-03-31T14:53:23.133520Z",
       "source": "https://metaforge.app/arc-raiders",
       "version": "autoscrapper-data-1"
     },
-    "itemCount": 528,
+    "itemCount": 540,
     "allQuestsCompleted": true
   },
   "items": [
@@ -407,6 +407,16 @@
         "Weapon - review based on your current loadout",
         "Consider tier and your play style",
         "Override: treat 'Your Call' as Keep"
+      ]
+    },
+    {
+      "id": "assessor-matrix",
+      "name": "Assessor Matrix",
+      "value": 5000,
+      "action": "sell",
+      "analysis": [
+        "Recycles into: 1x Advanced Mechanical Components, 3x Advanced ARC Powercell",
+        "Recycle value: Components (3670 coins) worth less than Item (5000 coins)"
       ]
     },
     {
@@ -1063,6 +1073,27 @@
       ]
     },
     {
+      "id": "canto",
+      "name": "Canto",
+      "value": 0,
+      "action": "keep",
+      "analysis": [
+        "Weapon - review based on your current loadout",
+        "Consider tier and your play style",
+        "Override: treat 'Your Call' as Keep"
+      ]
+    },
+    {
+      "id": "canto-blueprint",
+      "name": "Canto Blueprint",
+      "value": 5000,
+      "action": "keep",
+      "analysis": [
+        "Legendary rarity - extremely valuable",
+        "Keep all legendaries"
+      ]
+    },
+    {
       "id": "cat-bed",
       "name": "Cat Bed",
       "value": 1000,
@@ -1100,6 +1131,16 @@
       "analysis": [
         "High value (1000 coins)",
         "No crafting or upgrade use"
+      ]
+    },
+    {
+      "id": "coins",
+      "name": "Coins",
+      "value": 0,
+      "action": "sell",
+      "analysis": [
+        "No immediate use found",
+        "Safe to sell or recycle"
       ]
     },
     {
@@ -1558,6 +1599,26 @@
       ]
     },
     {
+      "id": "dolabra",
+      "name": "Dolabra",
+      "value": 27500,
+      "action": "keep",
+      "analysis": [
+        "Legendary rarity - extremely valuable",
+        "Keep all legendaries"
+      ]
+    },
+    {
+      "id": "dolabra-blueprint",
+      "name": "Dolabra Blueprint",
+      "value": 5000,
+      "action": "keep",
+      "analysis": [
+        "Legendary rarity - extremely valuable",
+        "Keep all legendaries"
+      ]
+    },
+    {
       "id": "doodly-duck",
       "name": "Doodly Duck",
       "value": 3000,
@@ -1630,7 +1691,7 @@
     {
       "id": "energy-ammo",
       "name": "Energy Clip",
-      "value": 1000,
+      "value": 200,
       "action": "keep",
       "analysis": [
         "Ammunition - essential for weapons",
@@ -1918,6 +1979,16 @@
       ]
     },
     {
+      "id": "faded-flush-aviator-color",
+      "name": "Faded Flush (Aviator Color)",
+      "value": 0,
+      "action": "sell",
+      "analysis": [
+        "No immediate use found",
+        "Safe to sell or recycle"
+      ]
+    },
+    {
       "id": "faded-photograph",
       "name": "Faded Photograph",
       "value": 640,
@@ -2009,6 +2080,16 @@
       "analysis": [
         "High value (3000 coins)",
         "No crafting or upgrade use"
+      ]
+    },
+    {
+      "id": "finger-gun-single-shot-emote",
+      "name": "Finger Gun Single Shot (Emote)",
+      "value": 0,
+      "action": "sell",
+      "analysis": [
+        "No immediate use found",
+        "Safe to sell or recycle"
       ]
     },
     {
@@ -3017,7 +3098,7 @@
       "value": 300,
       "action": "keep",
       "analysis": [
-        "Used in 5 crafting recipes",
+        "Used in 6 crafting recipes",
         "Common crafting ingredient",
         "Override: treat 'Your Call' as Keep"
       ]
@@ -3089,7 +3170,7 @@
       "value": 700,
       "action": "keep",
       "analysis": [
-        "Used in 22 crafting recipes",
+        "Used in 23 crafting recipes",
         "Rare crafting material",
         "Override: treat 'Your Call' as Keep"
       ]
@@ -3404,6 +3485,16 @@
       ]
     },
     {
+      "id": "patchwork-warden-color",
+      "name": "Patchwork (Warden Color)",
+      "value": 0,
+      "action": "sell",
+      "analysis": [
+        "No immediate use found",
+        "Safe to sell or recycle"
+      ]
+    },
+    {
       "id": "patrol-car-key",
       "name": "Patrol Car Key",
       "value": 100,
@@ -3651,6 +3742,16 @@
       ]
     },
     {
+      "id": "raider-tokens",
+      "name": "Raider Tokens",
+      "value": 0,
+      "action": "sell",
+      "analysis": [
+        "No immediate use found",
+        "Safe to sell or recycle"
+      ]
+    },
+    {
       "id": "raiders-refuge-security-code",
       "name": "Raider's Refuge Security Code",
       "value": 0,
@@ -3745,6 +3846,16 @@
       "analysis": [
         "Legendary rarity - extremely valuable",
         "Keep all legendaries"
+      ]
+    },
+    {
+      "id": "red-radio-renegade-color",
+      "name": "Red (Radio Renegade Color)",
+      "value": 0,
+      "action": "sell",
+      "analysis": [
+        "No immediate use found",
+        "Safe to sell or recycle"
       ]
     },
     {
@@ -4261,10 +4372,11 @@
       "id": "shredder-gyro",
       "name": "Shredder Gyro",
       "value": 3000,
-      "action": "sell",
+      "action": "keep",
       "analysis": [
-        "Recycles into: 3x ARC Alloy, 3x Mechanical Components",
-        "Recycle value: Components (2520 coins) worth less than Item (3000 coins)"
+        "Used in 1 crafting recipes",
+        "Rare crafting material",
+        "Override: treat 'Your Call' as Keep"
       ]
     },
     {
@@ -5134,6 +5246,17 @@
       "analysis": [
         "Recycles into: 4x Metal Parts, 5x Simple Gun Parts",
         "Recycle value: Components (1950 coins) worth less than Item (2000 coins)"
+      ]
+    },
+    {
+      "id": "vaporizer-regulator",
+      "name": "Vaporizer Regulator",
+      "value": 6000,
+      "action": "keep",
+      "analysis": [
+        "Used in 1 crafting recipes",
+        "Rare crafting material",
+        "Override: treat 'Your Call' as Keep"
       ]
     },
     {
